@@ -1,0 +1,1317 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="initial-scale=1,user-scalable=no,maximum-scale=1,width=device-width">
+        <meta name="mobile-web-app-capable" content="yes">
+        <meta name="apple-mobile-web-app-capable" content="yes">
+        <link rel="stylesheet" href="css/leaflet.css">
+        <link rel="stylesheet" href="css/L.Control.Layers.Tree.css">
+        <link rel="stylesheet" href="css/qgis2web.css">
+        <link rel="stylesheet" href="css/fontawesome-all.min.css">
+        <link rel="stylesheet" href="css/filter.css">
+<link rel="stylesheet" href="css/nouislider.min.css">
+        <style>
+        html, body, #map {
+            width: 100%;
+            height: 100%;
+            padding: 0;
+            margin: 0;
+        }
+        </style>
+        <title>UFP (1/CM2)</title>
+    </head>
+    <body>
+        <div id="map">
+        </div>
+        <script src="js/qgis2web_expressions.js"></script>
+        <script src="js/leaflet.js"></script>
+        <script src="js/L.Control.Layers.Tree.min.js"></script>
+        <script src="js/leaflet.rotatedMarker.js"></script>
+        <script src="js/leaflet.pattern.js"></script>
+        <script src="js/leaflet-hash.js"></script>
+        <script src="js/Autolinker.min.js"></script>
+        <script src="js/rbush.min.js"></script>
+        <script src="js/labelgun.min.js"></script>
+        <script src="js/labels.js"></script>
+        <script src="js/tailDT.js"></script>
+<script src="js/nouislider.min.js"></script>
+<script src="js/wNumb.js"></script>
+        <script src="data/Industrias_2.js"></script>
+        <script src="data/mun_utm_3.js"></script>
+        <script>
+        var map = L.map('map', {
+            zoomControl:false, maxZoom:28, minZoom:1
+        }).fitBounds([[18.83274307224413,-99.03169676149398],[19.623278592022917,-97.3101130301986]]);
+        var hash = new L.Hash(map);
+        map.attributionControl.setPrefix('<a href="https://github.com/tomchadwin/qgis2web" target="_blank">qgis2web</a> &middot; <a href="https://leafletjs.com" title="A JS library for interactive maps">Leaflet</a> &middot; <a href="https://qgis.org">QGIS</a>');
+        var autolinker = new Autolinker({truncate: {length: 30, location: 'smart'}});
+        // remove popup's row if "visible-with-data"
+        function removeEmptyRowsFromPopupContent(content, feature) {
+         var tempDiv = document.createElement('div');
+         tempDiv.innerHTML = content;
+         var rows = tempDiv.querySelectorAll('tr');
+         for (var i = 0; i < rows.length; i++) {
+             var td = rows[i].querySelector('td.visible-with-data');
+             var key = td ? td.id : '';
+             if (td && td.classList.contains('visible-with-data') && feature.properties[key] == null) {
+                 rows[i].parentNode.removeChild(rows[i]);
+             }
+         }
+         return tempDiv.innerHTML;
+        }
+        // add class to format popup if it contains media
+		function addClassToPopupIfMedia(content, popup) {
+			var tempDiv = document.createElement('div');
+			tempDiv.innerHTML = content;
+			if (tempDiv.querySelector('td img')) {
+				popup._contentNode.classList.add('media');
+					// Delay to force the redraw
+					setTimeout(function() {
+						popup.update();
+					}, 10);
+			} else {
+				popup._contentNode.classList.remove('media');
+			}
+		}
+        var title = new L.Control({'position':'topright'});
+        title.onAdd = function (map) {
+            this._div = L.DomUtil.create('div', 'info');
+            this.update();
+            return this._div;
+        };
+        title.update = function () {
+            this._div.innerHTML = '<h2>UFP (1/CM2)</h2>';
+        };
+        title.addTo(map);
+        var zoomControl = L.control.zoom({
+            position: 'topleft'
+        }).addTo(map);
+        var bounds_group = new L.featureGroup([]);
+        function setBounds() {
+        }
+        map.createPane('pane_GoogleSatelite_0');
+        map.getPane('pane_GoogleSatelite_0').style.zIndex = 400;
+        var layer_GoogleSatelite_0 = L.tileLayer('http://www.google.cn/maps/vt?lyrs=s@189&gl=cn&x={x}&y={y}&z={z}', {
+            pane: 'pane_GoogleSatelite_0',
+            opacity: 1.0,
+            attribution: '',
+            minZoom: 1,
+            maxZoom: 28,
+            minNativeZoom: 0,
+            maxNativeZoom: 18
+        });
+        layer_GoogleSatelite_0;
+        map.addLayer(layer_GoogleSatelite_0);
+        map.createPane('pane_UFP_1');
+        map.getPane('pane_UFP_1').style.zIndex = 401;
+        var img_UFP_1 = 'data/UFP_1.png';
+        var img_bounds_UFP_1 = [[18.8060024,-98.692649],[19.6147074,-97.8005723]];
+        var layer_UFP_1 = new L.imageOverlay(img_UFP_1,
+                                              img_bounds_UFP_1,
+                                              {pane: 'pane_UFP_1'});
+        bounds_group.addLayer(layer_UFP_1);
+        map.addLayer(layer_UFP_1);
+        function pop_Industrias_2(feature, layer) {
+            var popupContent = '<table>\
+                    <tr>\
+                        <th scope="row">nom_estab</th>\
+                        <td>' + (feature.properties['nom_estab'] !== null ? autolinker.link(feature.properties['nom_estab'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['per_ocu'] !== null ? autolinker.link(feature.properties['per_ocu'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            var content = removeEmptyRowsFromPopupContent(popupContent, feature);
+			layer.on('popupopen', function(e) {
+				addClassToPopupIfMedia(content, e.popup);
+			});
+			layer.bindPopup(content, { maxHeight: 400 });
+        }
+
+        function style_Industrias_2_0(feature) {
+            switch(String(feature.properties['per_ocu'])) {
+                case '100 personas':
+                    return {
+                pane: 'pane_Industrias_2',
+                radius: 4.0,
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(238,231,14,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '250 personas':
+                    return {
+                pane: 'pane_Industrias_2',
+                radius: 4.0,
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(46,223,220,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '30 personas':
+                    return {
+                pane: 'pane_Industrias_2',
+                radius: 4.0,
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(62,237,13,1.0)',
+                interactive: true,
+            }
+                    break;
+                case '50 personas':
+                    return {
+                pane: 'pane_Industrias_2',
+                radius: 4.0,
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(248,0,190,1.0)',
+                interactive: true,
+            }
+                    break;
+                default:
+                    return {
+                pane: 'pane_Industrias_2',
+                radius: 4.0,
+                opacity: 1,
+                color: 'rgba(35,35,35,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1,
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(109,85,220,1.0)',
+                interactive: true,
+            }
+                    break;
+            }
+        }
+        map.createPane('pane_Industrias_2');
+        map.getPane('pane_Industrias_2').style.zIndex = 402;
+        map.getPane('pane_Industrias_2').style['mix-blend-mode'] = 'normal';
+        var layer_Industrias_2 = new L.geoJson(json_Industrias_2, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_Industrias_2',
+            layerName: 'layer_Industrias_2',
+            pane: 'pane_Industrias_2',
+            onEachFeature: pop_Industrias_2,
+            pointToLayer: function (feature, latlng) {
+                var context = {
+                    feature: feature,
+                    variables: {}
+                };
+                return L.circleMarker(latlng, style_Industrias_2_0(feature));
+            },
+        });
+        bounds_group.addLayer(layer_Industrias_2);
+        map.addLayer(layer_Industrias_2);
+        function pop_mun_utm_3(feature, layer) {
+            var popupContent = '<table>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['CVEGEO'] !== null ? autolinker.link(feature.properties['CVEGEO'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <td colspan="2">' + (feature.properties['CVE_ENT'] !== null ? autolinker.link(feature.properties['CVE_ENT'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                    <tr>\
+                        <th scope="row">NOMGEO</th>\
+                        <td>' + (feature.properties['NOMGEO'] !== null ? autolinker.link(feature.properties['NOMGEO'].toLocaleString()) : '') + '</td>\
+                    </tr>\
+                </table>';
+            var content = removeEmptyRowsFromPopupContent(popupContent, feature);
+			layer.on('popupopen', function(e) {
+				addClassToPopupIfMedia(content, e.popup);
+			});
+			layer.bindPopup(content, { maxHeight: 400 });
+        }
+
+        function style_mun_utm_3_0() {
+            return {
+                pane: 'pane_mun_utm_3',
+                opacity: 1,
+                color: 'rgba(250,6,217,1.0)',
+                dashArray: '',
+                lineCap: 'butt',
+                lineJoin: 'miter',
+                weight: 1.0, 
+                fill: true,
+                fillOpacity: 1,
+                fillColor: 'rgba(125,139,143,0.0)',
+                interactive: true,
+            }
+        }
+        map.createPane('pane_mun_utm_3');
+        map.getPane('pane_mun_utm_3').style.zIndex = 403;
+        map.getPane('pane_mun_utm_3').style['mix-blend-mode'] = 'normal';
+        var layer_mun_utm_3 = new L.geoJson(json_mun_utm_3, {
+            attribution: '',
+            interactive: true,
+            dataVar: 'json_mun_utm_3',
+            layerName: 'layer_mun_utm_3',
+            pane: 'pane_mun_utm_3',
+            onEachFeature: pop_mun_utm_3,
+            style: style_mun_utm_3_0,
+        });
+        bounds_group.addLayer(layer_mun_utm_3);
+        map.addLayer(layer_mun_utm_3);
+        var overlaysTree = [
+            {label: '<img src="legend/mun_utm_3.png" /> mun_utm', layer: layer_mun_utm_3},
+            {label: 'Industrias<br /><table><tr><td style="text-align: center;"><img src="legend/Industrias_2_100personas0.png" /></td><td>100 personas</td></tr><tr><td style="text-align: center;"><img src="legend/Industrias_2_250personas1.png" /></td><td>250 personas</td></tr><tr><td style="text-align: center;"><img src="legend/Industrias_2_30personas2.png" /></td><td>30 personas</td></tr><tr><td style="text-align: center;"><img src="legend/Industrias_2_50personas3.png" /></td><td>50 personas</td></tr><tr><td style="text-align: center;"><img src="legend/Industrias_2_4.png" /></td><td></td></tr></table>', layer: layer_Industrias_2},
+            {label: "UFP", layer: layer_UFP_1},
+            {label: "Google Satelite", layer: layer_GoogleSatelite_0},]
+        var lay = L.control.layers.tree(null, overlaysTree,{
+            //namedToggle: true,
+            //selectorBack: false,
+            //closedSymbol: '&#8862; &#x1f5c0;',
+            //openedSymbol: '&#8863; &#x1f5c1;',
+            //collapseAll: 'Collapse all',
+            //expandAll: 'Expand all',
+            collapsed: true,
+        });
+        lay.addTo(map);
+        setBounds();
+        var mapDiv = document.getElementById('map');
+        var row = document.createElement('div');
+        row.className="row";
+        row.id="all";
+        row.style.height = "100%";
+        var col1 = document.createElement('div');
+        col1.className="col9";
+        col1.id = "mapWindow";
+        col1.style.height = "99%";
+        col1.style.width = "80%";
+        col1.style.display = "inline-block";
+        var col2 = document.createElement('div');
+        col2.className="col3";
+        col2.id = "menu";
+        col2.style.display = "inline-block";
+        mapDiv.parentNode.insertBefore(row, mapDiv);
+        document.getElementById("all").appendChild(col1);
+        document.getElementById("all").appendChild(col2);
+        col1.appendChild(mapDiv)
+        var Filters = {"nom_estab": "str","per_ocu": "str","NOMGEO": "str"};
+        function filterFunc() {
+          map.eachLayer(function(lyr){
+          if ("options" in lyr && "dataVar" in lyr["options"]){
+            features = this[lyr["options"]["dataVar"]].features.slice(0);
+            try{
+              for (key in Filters){
+                keyS = key.replace(/[^a-zA-Z0-9_]/g, "")
+                if (Filters[key] == "str" || Filters[key] == "bool"){
+                  var selection = [];
+                  var options = document.getElementById("sel_" + keyS).options
+                  for (var i=0; i < options.length; i++) {
+                    if (options[i].selected) selection.push(options[i].value);
+                  }
+                    try{
+                      if (key in features[0].properties){
+                        for (i = features.length - 1;
+                          i >= 0; --i){
+                          if (selection.indexOf(
+                          features[i].properties[key])<0
+                          && selection.length>0) {
+                          features.splice(i,1);
+                          }
+                        }
+                      }
+                    } catch(err){
+                  }
+                }
+                if (Filters[key] == "int"){
+                  sliderVals =  document.getElementById(
+                    "div_" + keyS).noUiSlider.get();
+                  try{
+                    if (key in features[0].properties){
+                    for (i = features.length - 1; i >= 0; --i){
+                      if (parseInt(features[i].properties[key])
+                          < sliderVals[0]
+                          || parseInt(features[i].properties[key])
+                          > sliderVals[1]){
+                            features.splice(i,1);
+                          }
+                        }
+                      }
+                    } catch(err){
+                    }
+                  }
+                if (Filters[key] == "real"){
+                  sliderVals =  document.getElementById(
+                    "div_" + keyS).noUiSlider.get();
+                  try{
+                    if (key in features[0].properties){
+                    for (i = features.length - 1; i >= 0; --i){
+                      if (features[i].properties[key]
+                          < sliderVals[0]
+                          || features[i].properties[key]
+                          > sliderVals[1]){
+                            features.splice(i,1);
+                          }
+                        }
+                      }
+                    } catch(err){
+                    }
+                  }
+                if (Filters[key] == "date"
+                  || Filters[key] == "datetime"
+                  || Filters[key] == "time"){
+                  try{
+                    if (key in features[0].properties){
+                      HTMLkey = key.replace(/[&\/\\#,+()$~%.'":*?<>{} ]/g, '');
+                      startdate = document.getElementById("dat_" +
+                        HTMLkey + "_date1").value.replace(" ", "T");
+                      enddate = document.getElementById("dat_" +
+                        HTMLkey + "_date2").value.replace(" ", "T");
+                      for (i = features.length - 1; i >= 0; --i){
+                        if (features[i].properties[key] < startdate
+                          || features[i].properties[key] > enddate){
+                          features.splice(i,1);
+                        }
+                      }
+                    }
+                  } catch(err){
+                  }
+                }
+              }
+            } catch(err){
+            }
+          this[lyr["options"]["layerName"]].clearLayers();
+          this[lyr["options"]["layerName"]].addData(features);
+          }
+          })
+        }
+            document.getElementById("menu").appendChild(
+                document.createElement("div"));
+            var div_nom_estab = document.createElement('div');
+            div_nom_estab.id = "div_nom_estab";
+            div_nom_estab.className= "filterselect";
+            document.getElementById("menu").appendChild(div_nom_estab);
+            sel_nom_estab = document.createElement('select');
+            sel_nom_estab.multiple = true;
+            sel_nom_estab.size = 10;
+            sel_nom_estab.id = "sel_nom_estab";
+            var nom_estab_options_str = "<option value='' unselected></option>";
+            sel_nom_estab.onchange = function(){filterFunc()};
+            nom_estab_options_str  += '<option value="1062_PUEBLA">1062_PUEBLA</option>';
+            nom_estab_options_str  += '<option value="A & P SOLUTIONS">A & P SOLUTIONS</option>';
+            nom_estab_options_str  += '<option value="A&R PUEBLA SPORTWEAR">A&R PUEBLA SPORTWEAR</option>';
+            nom_estab_options_str  += '<option value="AB CALSA">AB CALSA</option>';
+            nom_estab_options_str  += '<option value="ABS PLASTICA">ABS PLASTICA</option>';
+            nom_estab_options_str  += '<option value="ACABADOS ANALCO">ACABADOS ANALCO</option>';
+            nom_estab_options_str  += '<option value="ACABADOS GALIA">ACABADOS GALIA</option>';
+            nom_estab_options_str  += '<option value="ACABADOS INDUSTRIALES IMPORT & EXPORT">ACABADOS INDUSTRIALES IMPORT & EXPORT</option>';
+            nom_estab_options_str  += '<option value="ACABADOS RIO TEJO">ACABADOS RIO TEJO</option>';
+            nom_estab_options_str  += '<option value="ACABADOS TEXTILES BORIN">ACABADOS TEXTILES BORIN</option>';
+            nom_estab_options_str  += '<option value="ACAFINTEX">ACAFINTEX</option>';
+            nom_estab_options_str  += '<option value="ACATEX">ACATEX</option>';
+            nom_estab_options_str  += '<option value="ACERO PORCELANIZADO">ACERO PORCELANIZADO</option>';
+            nom_estab_options_str  += '<option value="ADIENT MEXICO AUTOMOTRIZ">ADIENT MEXICO AUTOMOTRIZ</option>';
+            nom_estab_options_str  += '<option value="ADOCRETOS DE PUEBLA">ADOCRETOS DE PUEBLA</option>';
+            nom_estab_options_str  += '<option value="AGROMAS">AGROMAS</option>';
+            nom_estab_options_str  += '<option value="AGUA INMACULADA">AGUA INMACULADA</option>';
+            nom_estab_options_str  += '<option value="AGUA SAN MARTIN">AGUA SAN MARTIN</option>';
+            nom_estab_options_str  += '<option value="AGUAS PUEBLA">AGUAS PUEBLA</option>';
+            nom_estab_options_str  += '<option value="AKSYS DE MEXICO">AKSYS DE MEXICO</option>';
+            nom_estab_options_str  += '<option value="AKSYS DE MEXICO SERVICIOS">AKSYS DE MEXICO SERVICIOS</option>';
+            nom_estab_options_str  += '<option value="ALEN DEL NORTE">ALEN DEL NORTE</option>';
+            nom_estab_options_str  += '<option value="ALFE CONFECCIONES">ALFE CONFECCIONES</option>';
+            nom_estab_options_str  += '<option value="ALILTEX">ALILTEX</option>';
+            nom_estab_options_str  += '<option value="ALIMENTOS EFA">ALIMENTOS EFA</option>';
+            nom_estab_options_str  += '<option value="ALLGAIER DE PUEBLA">ALLGAIER DE PUEBLA</option>';
+            nom_estab_options_str  += '<option value="ALMACEN DE EMPRESA ROLLY">ALMACEN DE EMPRESA ROLLY</option>';
+            nom_estab_options_str  += '<option value="ALPHA CERAMICA">ALPHA CERAMICA</option>';
+            nom_estab_options_str  += '<option value="ALPHA INDUSTRY PUEBLA">ALPHA INDUSTRY PUEBLA</option>';
+            nom_estab_options_str  += '<option value="ALTEC MANUFACTURAS">ALTEC MANUFACTURAS</option>';
+            nom_estab_options_str  += '<option value="ALTO ACABADO">ALTO ACABADO</option>';
+            nom_estab_options_str  += '<option value="ALUDEC AUTOMOCION">ALUDEC AUTOMOCION</option>';
+            nom_estab_options_str  += '<option value="AMEREX">AMEREX</option>';
+            nom_estab_options_str  += '<option value="AMEREX SA DE CV">AMEREX SA DE CV</option>';
+            nom_estab_options_str  += '<option value="ANTEX">ANTEX</option>';
+            nom_estab_options_str  += '<option value="APLICACION DE PROYECTOS Y SERVICIOS">APLICACION DE PROYECTOS Y SERVICIOS</option>';
+            nom_estab_options_str  += '<option value="APOLO TEXTIL">APOLO TEXTIL</option>';
+            nom_estab_options_str  += '<option value="ARCE TOOLS">ARCE TOOLS</option>';
+            nom_estab_options_str  += '<option value="ARCHIMEX CORRUGADO Y ETIQUETAS">ARCHIMEX CORRUGADO Y ETIQUETAS</option>';
+            nom_estab_options_str  += '<option value="ARCOMEX PLANTA IXTACUIXTLA">ARCOMEX PLANTA IXTACUIXTLA</option>';
+            nom_estab_options_str  += '<option value="ARCOMEX PLANTA NANACAMILPA 1">ARCOMEX PLANTA NANACAMILPA 1</option>';
+            nom_estab_options_str  += '<option value="ARCOMEX PLANTA NANACAMILPA 2">ARCOMEX PLANTA NANACAMILPA 2</option>';
+            nom_estab_options_str  += '<option value="ARCOMEX PLANTA TLAXCALA">ARCOMEX PLANTA TLAXCALA</option>';
+            nom_estab_options_str  += '<option value="ARENA Y COMPA0IA">ARENA Y COMPA0IA</option>';
+            nom_estab_options_str  += '<option value="ARITEXCADING MEXICO">ARITEXCADING MEXICO</option>';
+            nom_estab_options_str  += '<option value="ARTE JIN">ARTE JIN</option>';
+            nom_estab_options_str  += '<option value="AS MAQUILA MEXICO">AS MAQUILA MEXICO</option>';
+            nom_estab_options_str  += '<option value="AUNDE MEXICO">AUNDE MEXICO</option>';
+            nom_estab_options_str  += '<option value="AUTOMATION SYSTEMS GJ">AUTOMATION SYSTEMS GJ</option>';
+            nom_estab_options_str  += '<option value="AUTOMOTIVE VERITAS DE MEXICO">AUTOMOTIVE VERITAS DE MEXICO</option>';
+            nom_estab_options_str  += '<option value="AUTOPLASTEK">AUTOPLASTEK</option>';
+            nom_estab_options_str  += '<option value="AUTOTEK INDUSTRIAL DE MEXICO">AUTOTEK INDUSTRIAL DE MEXICO</option>';
+            nom_estab_options_str  += '<option value="AUTOTEK MEXICO">AUTOTEK MEXICO</option>';
+            nom_estab_options_str  += '<option value="AUXIM DE MEXICO">AUXIM DE MEXICO</option>';
+            nom_estab_options_str  += '<option value="AZTL4N TEXTIL">AZTL4N TEXTIL</option>';
+            nom_estab_options_str  += '<option value="AZUL TEXTIL">AZUL TEXTIL</option>';
+            nom_estab_options_str  += '<option value="BASF MEXICANA SA DE CV">BASF MEXICANA SA DE CV</option>';
+            nom_estab_options_str  += '<option value="BEBIDAS Y JUGOS POBLANOS">BEBIDAS Y JUGOS POBLANOS</option>';
+            nom_estab_options_str  += '<option value="BEER LINMEX">BEER LINMEX</option>';
+            nom_estab_options_str  += '<option value="BENTELER DE MEXICO">BENTELER DE MEXICO</option>';
+            nom_estab_options_str  += '<option value="BICILEYCA">BICILEYCA</option>';
+            nom_estab_options_str  += '<option value="BIG COLA">BIG COLA</option>';
+            nom_estab_options_str  += '<option value="BIG PLASTICS">BIG PLASTICS</option>';
+            nom_estab_options_str  += '<option value="BIO PAPPEL">BIO PAPPEL</option>';
+            nom_estab_options_str  += '<option value="BLACHER ILUMINACION MEXICO">BLACHER ILUMINACION MEXICO</option>';
+            nom_estab_options_str  += '<option value="BLANCOS DECORATIVOS VICTORIA">BLANCOS DECORATIVOS VICTORIA</option>';
+            nom_estab_options_str  += '<option value="BLUE QUARK GROUP">BLUE QUARK GROUP</option>';
+            nom_estab_options_str  += '<option value="BODEGA PLASTICOS SILKA">BODEGA PLASTICOS SILKA</option>';
+            nom_estab_options_str  += '<option value="BODEGAS COPA DE ORO">BODEGAS COPA DE ORO</option>';
+            nom_estab_options_str  += '<option value="BON DESSERT">BON DESSERT</option>';
+            nom_estab_options_str  += '<option value="BON PANE">BON PANE</option>';
+            nom_estab_options_str  += '<option value="BON PANE PANADERIA">BON PANE PANADERIA</option>';
+            nom_estab_options_str  += '<option value="BONAFON">BONAFON</option>';
+            nom_estab_options_str  += '<option value="BONASA">BONASA</option>';
+            nom_estab_options_str  += '<option value="BONASA BORDADORA NACIONAL">BONASA BORDADORA NACIONAL</option>';
+            nom_estab_options_str  += '<option value="BONETERA MATI">BONETERA MATI</option>';
+            nom_estab_options_str  += '<option value="BONETERA RYT DE PUEBLA">BONETERA RYT DE PUEBLA</option>';
+            nom_estab_options_str  += '<option value="BOOKMART">BOOKMART</option>';
+            nom_estab_options_str  += '<option value="BORTEK">BORTEK</option>';
+            nom_estab_options_str  += '<option value="BROSE PUEBLA">BROSE PUEBLA</option>';
+            nom_estab_options_str  += '<option value="BUSTEXTIL">BUSTEXTIL</option>';
+            nom_estab_options_str  += '<option value="CA AUTOMOTIVE MEXICO">CA AUTOMOTIVE MEXICO</option>';
+            nom_estab_options_str  += '<option value="CACAHUATES SANCHEZ">CACAHUATES SANCHEZ</option>';
+            nom_estab_options_str  += '<option value="CAJAS CORRUGADAS DE AGUASCALIENTES">CAJAS CORRUGADAS DE AGUASCALIENTES</option>';
+            nom_estab_options_str  += '<option value="CAJAS Y CORRUGADOS PARA EMPAQUE">CAJAS Y CORRUGADOS PARA EMPAQUE</option>';
+            nom_estab_options_str  += '<option value="CAJINSA">CAJINSA</option>';
+            nom_estab_options_str  += '<option value="CALIDRA DE ORIENTE">CALIDRA DE ORIENTE</option>';
+            nom_estab_options_str  += '<option value="CALIFORNIA CUTTING AND SEWING">CALIFORNIA CUTTING AND SEWING</option>';
+            nom_estab_options_str  += '<option value="CAMPRA">CAMPRA</option>';
+            nom_estab_options_str  += '<option value="CAPSUGEL DE MEXICO">CAPSUGEL DE MEXICO</option>';
+            nom_estab_options_str  += '<option value="CARAMELOS DON PICOSO">CARAMELOS DON PICOSO</option>';
+            nom_estab_options_str  += '<option value="CARDIO TECHNICS">CARDIO TECHNICS</option>';
+            nom_estab_options_str  += '<option value="CARPE">CARPE</option>';
+            nom_estab_options_str  += '<option value="CATSA PLANTA PUEBLA">CATSA PLANTA PUEBLA</option>';
+            nom_estab_options_str  += '<option value="CECSAMEX">CECSAMEX</option>';
+            nom_estab_options_str  += '<option value="CEDINSA">CEDINSA</option>';
+            nom_estab_options_str  += '<option value="CELULOSA DE FIBRAS MEXICANAS">CELULOSA DE FIBRAS MEXICANAS</option>';
+            nom_estab_options_str  += '<option value="CEMENTERA MX_PTA. TEPEACA">CEMENTERA MX_PTA. TEPEACA</option>';
+            nom_estab_options_str  += '<option value="CENTRO DE DISTRIBUCION ARAM LUZ">CENTRO DE DISTRIBUCION ARAM LUZ</option>';
+            nom_estab_options_str  += '<option value="CERILLERA ATLAS">CERILLERA ATLAS</option>';
+            nom_estab_options_str  += '<option value="CHEDRAUI TEXTIL">CHEDRAUI TEXTIL</option>';
+            nom_estab_options_str  += '<option value="CHIEF TEX">CHIEF TEX</option>';
+            nom_estab_options_str  += '<option value="CHILIAN SCREEN PRINTING">CHILIAN SCREEN PRINTING</option>';
+            nom_estab_options_str  += '<option value="CIA INDUSTRIAL SAINT CHARBEL">CIA INDUSTRIAL SAINT CHARBEL</option>';
+            nom_estab_options_str  += '<option value="CIA INDUSTRIAL TEXTIL ANAHUAC">CIA INDUSTRIAL TEXTIL ANAHUAC</option>';
+            nom_estab_options_str  += '<option value="CINIIA">CINIIA</option>';
+            nom_estab_options_str  += '<option value="CIPSA">CIPSA</option>';
+            nom_estab_options_str  += '<option value="CLARIANT">CLARIANT</option>';
+            nom_estab_options_str  += '<option value="CLARIANT MEXICO">CLARIANT MEXICO</option>';
+            nom_estab_options_str  += '<option value="COATS MEXICO">COATS MEXICO</option>';
+            nom_estab_options_str  += '<option value="COBBACK DE M0XICO">COBBACK DE M0XICO</option>';
+            nom_estab_options_str  += '<option value="COINDU MEXICO">COINDU MEXICO</option>';
+            nom_estab_options_str  += '<option value="COLCHONERA EURUASTUR">COLCHONERA EURUASTUR</option>';
+            nom_estab_options_str  += '<option value="COMAPRO">COMAPRO</option>';
+            nom_estab_options_str  += '<option value="COMERCIALIZADORA DE JERGAS E HILOS SALGADO">COMERCIALIZADORA DE JERGAS E HILOS SALGADO</option>';
+            nom_estab_options_str  += '<option value="COMERCIALIZADORA DE PERSIANAS GABIN">COMERCIALIZADORA DE PERSIANAS GABIN</option>';
+            nom_estab_options_str  += '<option value="COMERCIALIZADORA INDUSTRIAL MILLOP">COMERCIALIZADORA INDUSTRIAL MILLOP</option>';
+            nom_estab_options_str  += '<option value="COMERCIALIZADORA PALACIOS ORTIZ">COMERCIALIZADORA PALACIOS ORTIZ</option>';
+            nom_estab_options_str  += '<option value="COMERCIALIZADORA TUNONI">COMERCIALIZADORA TUNONI</option>';
+            nom_estab_options_str  += '<option value="COMPA3IA HARINERA DE ORIENTE">COMPA3IA HARINERA DE ORIENTE</option>';
+            nom_estab_options_str  += '<option value="COMPA3IA INDUSTRIAL PAPELERA POBLANA">COMPA3IA INDUSTRIAL PAPELERA POBLANA</option>';
+            nom_estab_options_str  += '<option value="COMPA3IA MANUFACTURERA DE ROPA ROAL">COMPA3IA MANUFACTURERA DE ROPA ROAL</option>';
+            nom_estab_options_str  += '<option value="COMPA3IA MEXICANA DE TEJAS Y PRODUCTOS DE BARRO">COMPA3IA MEXICANA DE TEJAS Y PRODUCTOS DE BARRO</option>';
+            nom_estab_options_str  += '<option value="COMPA3IA TEXTIL SANTA BARBARA">COMPA3IA TEXTIL SANTA BARBARA</option>';
+            nom_estab_options_str  += '<option value="COMPA7IA MANUFACTURERA HERCO">COMPA7IA MANUFACTURERA HERCO</option>';
+            nom_estab_options_str  += '<option value="COMPANIA TEXTIL SANTA BARBARA">COMPANIA TEXTIL SANTA BARBARA</option>';
+            nom_estab_options_str  += '<option value="CONALUM">CONALUM</option>';
+            nom_estab_options_str  += '<option value="CONCORDE GROUP">CONCORDE GROUP</option>';
+            nom_estab_options_str  += '<option value="CONCRETOS ANGELOPOLIS">CONCRETOS ANGELOPOLIS</option>';
+            nom_estab_options_str  += '<option value="CONCRETOS CLINKER">CONCRETOS CLINKER</option>';
+            nom_estab_options_str  += '<option value="CONCRETOS TECNICOS">CONCRETOS TECNICOS</option>';
+            nom_estab_options_str  += '<option value="CONFECCI2N EN SERIE DE OTRA ROPA EXTERIOR DE MATERIALES TEXTILES">CONFECCI2N EN SERIE DE OTRA ROPA EXTERIOR DE MATERIALES TEXTILES</option>';
+            nom_estab_options_str  += '<option value="CONFECCIONES DE PUNTA">CONFECCIONES DE PUNTA</option>';
+            nom_estab_options_str  += '<option value="CONFECCIONES EL CORTE INGLES">CONFECCIONES EL CORTE INGLES</option>';
+            nom_estab_options_str  += '<option value="CONFECCIONES KRO">CONFECCIONES KRO</option>';
+            nom_estab_options_str  += '<option value="CONFECCIONES ROMERS">CONFECCIONES ROMERS</option>';
+            nom_estab_options_str  += '<option value="CONFECCIONES SOPAK">CONFECCIONES SOPAK</option>';
+            nom_estab_options_str  += '<option value="CONFECCIONES XERCICE">CONFECCIONES XERCICE</option>';
+            nom_estab_options_str  += '<option value="CONFECCIONES Y DISE0OS DE PUEBLA">CONFECCIONES Y DISE0OS DE PUEBLA</option>';
+            nom_estab_options_str  += '<option value="CONFECCIONES Y DISE2OS DE PUEBLA">CONFECCIONES Y DISE2OS DE PUEBLA</option>';
+            nom_estab_options_str  += '<option value="CONFITES FADECHI">CONFITES FADECHI</option>';
+            nom_estab_options_str  += '<option value="CONSERVAS Y CONGELADOS DE MEXICO">CONSERVAS Y CONGELADOS DE MEXICO</option>';
+            nom_estab_options_str  += '<option value="CONTINENTAL AUTOMOTIVE GUADALAJARA MEXICO">CONTINENTAL AUTOMOTIVE GUADALAJARA MEXICO</option>';
+            nom_estab_options_str  += '<option value="CONVE & AVS DE M4XICO">CONVE & AVS DE M4XICO</option>';
+            nom_estab_options_str  += '<option value="CONVERTIPAP">CONVERTIPAP</option>';
+            nom_estab_options_str  += '<option value="CORMAPLAST">CORMAPLAST</option>';
+            nom_estab_options_str  += '<option value="CORPORACION INDUSTRIAL TEXDUO">CORPORACION INDUSTRIAL TEXDUO</option>';
+            nom_estab_options_str  += '<option value="CORPORATIVO BORETEX">CORPORATIVO BORETEX</option>';
+            nom_estab_options_str  += '<option value="CORPORATIVO CAFE COLIBRI">CORPORATIVO CAFE COLIBRI</option>';
+            nom_estab_options_str  += '<option value="CORPORATIVO MAGUEYERO DE SAN ISIDRO">CORPORATIVO MAGUEYERO DE SAN ISIDRO</option>';
+            nom_estab_options_str  += '<option value="CORRUGADOS DEL ALTIPLANO">CORRUGADOS DEL ALTIPLANO</option>';
+            nom_estab_options_str  += '<option value="CORRUGADOS Y EMPAQUES DE ORIENTE">CORRUGADOS Y EMPAQUES DE ORIENTE</option>';
+            nom_estab_options_str  += '<option value="CORTE Y DOBLEZ ACERO NEGRO Y ACERO INOXIDABLE">CORTE Y DOBLEZ ACERO NEGRO Y ACERO INOXIDABLE</option>';
+            nom_estab_options_str  += '<option value="COSTALES VILLAR">COSTALES VILLAR</option>';
+            nom_estab_options_str  += '<option value="COSTURAS Y MANUFACTURAS DE TLAXCALA">COSTURAS Y MANUFACTURAS DE TLAXCALA</option>';
+            nom_estab_options_str  += '<option value="CPE ELECTRONICA MEXICO">CPE ELECTRONICA MEXICO</option>';
+            nom_estab_options_str  += '<option value="CRYOINFRA PLANTA PUEBLA">CRYOINFRA PLANTA PUEBLA</option>';
+            nom_estab_options_str  += '<option value="CT AUTOMOTIVE SYSTEMS DE MEXICO">CT AUTOMOTIVE SYSTEMS DE MEXICO</option>';
+            nom_estab_options_str  += '<option value="DABALDON">DABALDON</option>';
+            nom_estab_options_str  += '<option value="DACSA">DACSA</option>';
+            nom_estab_options_str  += '<option value="DANA DIVISION FORJAS TLAXCALA">DANA DIVISION FORJAS TLAXCALA</option>';
+            nom_estab_options_str  += '<option value="DARANJO MEXICO">DARANJO MEXICO</option>';
+            nom_estab_options_str  += '<option value="DATOS INFORMACION Y SISTEMAS">DATOS INFORMACION Y SISTEMAS</option>';
+            nom_estab_options_str  += '<option value="DEACERO ALAMBRES PUEBLA">DEACERO ALAMBRES PUEBLA</option>';
+            nom_estab_options_str  += '<option value="DEPORTIVOS QUINI">DEPORTIVOS QUINI</option>';
+            nom_estab_options_str  += '<option value="DERIVADOS LACTEOS EL SABINO">DERIVADOS LACTEOS EL SABINO</option>';
+            nom_estab_options_str  += '<option value="DIANA SOLUCIONES EDUCATIVAS">DIANA SOLUCIONES EDUCATIVAS</option>';
+            nom_estab_options_str  += '<option value="DILUYENTES Y MEZCLAS">DILUYENTES Y MEZCLAS</option>';
+            nom_estab_options_str  += '<option value="DIPROLAM">DIPROLAM</option>';
+            nom_estab_options_str  += '<option value="DIS">DIS</option>';
+            nom_estab_options_str  += '<option value="DISE0O Y TECNICA TEXTIL">DISE0O Y TECNICA TEXTIL</option>';
+            nom_estab_options_str  += '<option value="DISE4O Y DECORACION MANIQUIES">DISE4O Y DECORACION MANIQUIES</option>';
+            nom_estab_options_str  += '<option value="DISTRIBUIDORA DE EMPAQUES RAVASA S.A. DE C.V.">DISTRIBUIDORA DE EMPAQUES RAVASA S.A. DE C.V.</option>';
+            nom_estab_options_str  += '<option value="DMM DISPOSITIVOS Y MAQUINADOS MEXICANOS">DMM DISPOSITIVOS Y MAQUINADOS MEXICANOS</option>';
+            nom_estab_options_str  += '<option value="DOMENICO INTERNACIONAL">DOMENICO INTERNACIONAL</option>';
+            nom_estab_options_str  += '<option value="DOW QUIMICA MEXICANA">DOW QUIMICA MEXICANA</option>';
+            nom_estab_options_str  += '<option value="DRAEXLMAIER PARTES AUTOMOTRICES DE MEXICO">DRAEXLMAIER PARTES AUTOMOTRICES DE MEXICO</option>';
+            nom_estab_options_str  += '<option value="DUIDEA">DUIDEA</option>';
+            nom_estab_options_str  += '<option value="DULCES ANAHUAC">DULCES ANAHUAC</option>';
+            nom_estab_options_str  += '<option value="DULCES Y CHOCOLATES LA PERLA">DULCES Y CHOCOLATES LA PERLA</option>';
+            nom_estab_options_str  += '<option value="DULCES Y PRODUCTOS DE CACAHUATE LA JOSEFINA">DULCES Y PRODUCTOS DE CACAHUATE LA JOSEFINA</option>';
+            nom_estab_options_str  += '<option value="DULCES Y PRODUCTOS DE CACAHUATES LA JOSEFINA">DULCES Y PRODUCTOS DE CACAHUATES LA JOSEFINA</option>';
+            nom_estab_options_str  += '<option value="DUNNAGESTONE">DUNNAGESTONE</option>';
+            nom_estab_options_str  += '<option value="E C I S A CONSTRUCCIONES">E C I S A CONSTRUCCIONES</option>';
+            nom_estab_options_str  += '<option value="E PLAST MX">E PLAST MX</option>';
+            nom_estab_options_str  += '<option value="EAGLE TLAXCALA MEXICO">EAGLE TLAXCALA MEXICO</option>';
+            nom_estab_options_str  += '<option value="EAST FACTOR">EAST FACTOR</option>';
+            nom_estab_options_str  += '<option value="ECO FENIX">ECO FENIX</option>';
+            nom_estab_options_str  += '<option value="ECO INDUSTRIAS SAN RAFAEL">ECO INDUSTRIAS SAN RAFAEL</option>';
+            nom_estab_options_str  += '<option value="ECO INDUSTRIAS SR">ECO INDUSTRIAS SR</option>';
+            nom_estab_options_str  += '<option value="ECOVERT">ECOVERT</option>';
+            nom_estab_options_str  += '<option value="EINPACKEN">EINPACKEN</option>';
+            nom_estab_options_str  += '<option value="EISSMANN AUTOMOTIVE DE MEXICO">EISSMANN AUTOMOTIVE DE MEXICO</option>';
+            nom_estab_options_str  += '<option value="ELABORACI2N DE GALLETAS Y PASTAS PARA SOPA">ELABORACI2N DE GALLETAS Y PASTAS PARA SOPA</option>';
+            nom_estab_options_str  += '<option value="ELABORACION DE ETIQUETAS DE BIG COLA">ELABORACION DE ETIQUETAS DE BIG COLA</option>';
+            nom_estab_options_str  += '<option value="ELEMENTAL DENIM">ELEMENTAL DENIM</option>';
+            nom_estab_options_str  += '<option value="EMBLEMAS BORDADOS DE MEXICO">EMBLEMAS BORDADOS DE MEXICO</option>';
+            nom_estab_options_str  += '<option value="EMBOTELLADORA FERSAN">EMBOTELLADORA FERSAN</option>';
+            nom_estab_options_str  += '<option value="EMPACABADOS">EMPACABADOS</option>';
+            nom_estab_options_str  += '<option value="EMPACADORA MEXICANA DE PUEBLA">EMPACADORA MEXICANA DE PUEBLA</option>';
+            nom_estab_options_str  += '<option value="EMPANYS HOT">EMPANYS HOT</option>';
+            nom_estab_options_str  += '<option value="EMPAQUES PLASTICOS INDUSTRIALES">EMPAQUES PLASTICOS INDUSTRIALES</option>';
+            nom_estab_options_str  += '<option value="ENGINEERING SERVICE">ENGINEERING SERVICE</option>';
+            nom_estab_options_str  += '<option value="ENVASES PLASTICOS GILMAR">ENVASES PLASTICOS GILMAR</option>';
+            nom_estab_options_str  += '<option value="ENVASES TP CO">ENVASES TP CO</option>';
+            nom_estab_options_str  += '<option value="ENVASES UNIVERSALES DE MEXICO">ENVASES UNIVERSALES DE MEXICO</option>';
+            nom_estab_options_str  += '<option value="EOLIS AMERICANA LATINA">EOLIS AMERICANA LATINA</option>';
+            nom_estab_options_str  += '<option value="ERICSSON ANTENNA TECHNOLOGY MEXICO">ERICSSON ANTENNA TECHNOLOGY MEXICO</option>';
+            nom_estab_options_str  += '<option value="ESPINTEX">ESPINTEX</option>';
+            nom_estab_options_str  += '<option value="ESTACIONAMIENTO LUK PUEBLA">ESTACIONAMIENTO LUK PUEBLA</option>';
+            nom_estab_options_str  += '<option value="ESTANTERIA METALICA RIJAYA">ESTANTERIA METALICA RIJAYA</option>';
+            nom_estab_options_str  += '<option value="ETIQUETAS FERRERO DE PUEBLA">ETIQUETAS FERRERO DE PUEBLA</option>';
+            nom_estab_options_str  += '<option value="ETIROCH">ETIROCH</option>';
+            nom_estab_options_str  += '<option value="EUWE EUGEN WEXLER DE MEXICO">EUWE EUGEN WEXLER DE MEXICO</option>';
+            nom_estab_options_str  += '<option value="FAB DE MUEBLES, EXCEPTO COCINAS INT, MUEB DE BA O, OFICINA Y ESTANTERIA">FAB DE MUEBLES, EXCEPTO COCINAS INT, MUEB DE BA O, OFICINA Y ESTANTERIA</option>';
+            nom_estab_options_str  += '<option value="FABRICA DE BOTANAS CHARLY">FABRICA DE BOTANAS CHARLY</option>';
+            nom_estab_options_str  += '<option value="FABRICA DE CAJAS CORRUGADAS SAN PEDRO">FABRICA DE CAJAS CORRUGADAS SAN PEDRO</option>';
+            nom_estab_options_str  += '<option value="FABRICA DE CARTON MI CAJA">FABRICA DE CARTON MI CAJA</option>';
+            nom_estab_options_str  += '<option value="FABRICA DE DULCES Y CHOCOLATES LA POBLANA">FABRICA DE DULCES Y CHOCOLATES LA POBLANA</option>';
+            nom_estab_options_str  += '<option value="FABRICA DE LAMPARAS">FABRICA DE LAMPARAS</option>';
+            nom_estab_options_str  += '<option value="FABRICA DE MANIQUIES CONTINENTAL">FABRICA DE MANIQUIES CONTINENTAL</option>';
+            nom_estab_options_str  += '<option value="FABRICA DE MANUFACTURAS JG">FABRICA DE MANUFACTURAS JG</option>';
+            nom_estab_options_str  += '<option value="FABRICA DE PIEZAS METALICAS TROQUELADAS PARA VEHICULOS AUTOMOTRICES SIN NOMBRE">FABRICA DE PIEZAS METALICAS TROQUELADAS PARA VEHICULOS AUTOMOTRICES SIN NOMBRE</option>';
+            nom_estab_options_str  += '<option value="FABRICA DE SAN MARTIN">FABRICA DE SAN MARTIN</option>';
+            nom_estab_options_str  += '<option value="FABRICA DE TAPAS DE PLASTICOS">FABRICA DE TAPAS DE PLASTICOS</option>';
+            nom_estab_options_str  += '<option value="FABRICA FREWIOD">FABRICA FREWIOD</option>';
+            nom_estab_options_str  += '<option value="FABRICA INDUSTRIAL MASTER CONTROLS">FABRICA INDUSTRIAL MASTER CONTROLS</option>';
+            nom_estab_options_str  += '<option value="FABRICA JOSE LUIS CARAVES ROQUE">FABRICA JOSE LUIS CARAVES ROQUE</option>';
+            nom_estab_options_str  += '<option value="FABRICA MARIA">FABRICA MARIA</option>';
+            nom_estab_options_str  += '<option value="FABRICACION DE CALCETIN CALCETINERA KARELY JHONTEX">FABRICACION DE CALCETIN CALCETINERA KARELY JHONTEX</option>';
+            nom_estab_options_str  += '<option value="FABRICACION DE EQUIPOS GASTRONOMICOS GRUPO INSECTOFIN">FABRICACION DE EQUIPOS GASTRONOMICOS GRUPO INSECTOFIN</option>';
+            nom_estab_options_str  += '<option value="FABRICACIONES ESPECIALIZADAS DE TLAXCALA">FABRICACIONES ESPECIALIZADAS DE TLAXCALA</option>';
+            nom_estab_options_str  += '<option value="FACORE">FACORE</option>';
+            nom_estab_options_str  += '<option value="FARMACOS CONTINENTALES">FARMACOS CONTINENTALES</option>';
+            nom_estab_options_str  += '<option value="FAURECIA SISTEMAS AUTOMOTRICES DE MEXICO">FAURECIA SISTEMAS AUTOMOTRICES DE MEXICO</option>';
+            nom_estab_options_str  += '<option value="FAYCOB">FAYCOB</option>';
+            nom_estab_options_str  += '<option value="FEDERAL MOGUL">FEDERAL MOGUL</option>';
+            nom_estab_options_str  += '<option value="FERGUSON FIBERS DE MEXICO">FERGUSON FIBERS DE MEXICO</option>';
+            nom_estab_options_str  += '<option value="FFT MEXICO">FFT MEXICO</option>';
+            nom_estab_options_str  += '<option value="FIBER FILL">FIBER FILL</option>';
+            nom_estab_options_str  += '<option value="FIBRAS LA HIGIENICA">FIBRAS LA HIGIENICA</option>';
+            nom_estab_options_str  += '<option value="FIBRAS PARA EL ASEO">FIBRAS PARA EL ASEO</option>';
+            nom_estab_options_str  += '<option value="FILTROS Y MALLAS DE PUEBLA">FILTROS Y MALLAS DE PUEBLA</option>';
+            nom_estab_options_str  += '<option value="FISCHER TUBTECH">FISCHER TUBTECH</option>';
+            nom_estab_options_str  += '<option value="FLEXA POLIETILENOS EXPANDIDOS MEXICANOS">FLEXA POLIETILENOS EXPANDIDOS MEXICANOS</option>';
+            nom_estab_options_str  += '<option value="FLOWSERVE S DE RL DE CV">FLOWSERVE S DE RL DE CV</option>';
+            nom_estab_options_str  += '<option value="FORRAJERA ACATEPEC">FORRAJERA ACATEPEC</option>';
+            nom_estab_options_str  += '<option value="FRANELAS DE MEXICO">FRANELAS DE MEXICO</option>';
+            nom_estab_options_str  += '<option value="FTE MEXICANA">FTE MEXICANA</option>';
+            nom_estab_options_str  += '<option value="FUERTE FASHION">FUERTE FASHION</option>';
+            nom_estab_options_str  += '<option value="FUJIKURA AUTOMOTIVE MEXICO QUERETARO">FUJIKURA AUTOMOTIVE MEXICO QUERETARO</option>';
+            nom_estab_options_str  += '<option value="FUNDICIONES DE ACERO ESTRUCTURAL">FUNDICIONES DE ACERO ESTRUCTURAL</option>';
+            nom_estab_options_str  += '<option value="FUNDIDORA INDUSTRIAL DE TLAXCALA">FUNDIDORA INDUSTRIAL DE TLAXCALA</option>';
+            nom_estab_options_str  += '<option value="FUNHEDI">FUNHEDI</option>';
+            nom_estab_options_str  += '<option value="FYCOMEX">FYCOMEX</option>';
+            nom_estab_options_str  += '<option value="FYSAM AUTO DECORATIVE DE MEXICO">FYSAM AUTO DECORATIVE DE MEXICO</option>';
+            nom_estab_options_str  += '<option value="GALIA TEXTIL">GALIA TEXTIL</option>';
+            nom_estab_options_str  += '<option value="GALLETERA ITALIANA">GALLETERA ITALIANA</option>';
+            nom_estab_options_str  += '<option value="GALVANOPLASTIA Y PINTURAS DE PUEBLA">GALVANOPLASTIA Y PINTURAS DE PUEBLA</option>';
+            nom_estab_options_str  += '<option value="GAPSA">GAPSA</option>';
+            nom_estab_options_str  += '<option value="GARLO">GARLO</option>';
+            nom_estab_options_str  += '<option value="GENERAL CABLE DE MEXICO">GENERAL CABLE DE MEXICO</option>';
+            nom_estab_options_str  += '<option value="GENI DE MEXICO">GENI DE MEXICO</option>';
+            nom_estab_options_str  += '<option value="GEOMETRICA MIL">GEOMETRICA MIL</option>';
+            nom_estab_options_str  += '<option value="GERENCIA ESTATAL TLAXCALA">GERENCIA ESTATAL TLAXCALA</option>';
+            nom_estab_options_str  += '<option value="GESTAMP PUEBLA">GESTAMP PUEBLA</option>';
+            nom_estab_options_str  += '<option value="GESTAMP PUEBLA II">GESTAMP PUEBLA II</option>';
+            nom_estab_options_str  += '<option value="GESTAR">GESTAR</option>';
+            nom_estab_options_str  += '<option value="GG SOLUCIONES Y SERVICIOS INTEGRALES INTEGRALES PARA LA INDUSTRIA SSISA">GG SOLUCIONES Y SERVICIOS INTEGRALES INTEGRALES PARA LA INDUSTRIA SSISA</option>';
+            nom_estab_options_str  += '<option value="GGM PUEBLA">GGM PUEBLA</option>';
+            nom_estab_options_str  += '<option value="GILBER TEX">GILBER TEX</option>';
+            nom_estab_options_str  += '<option value="GLM COMPONENTS MEXICO">GLM COMPONENTS MEXICO</option>';
+            nom_estab_options_str  += '<option value="GLOBAL DENIM">GLOBAL DENIM</option>';
+            nom_estab_options_str  += '<option value="GLOBAL FLOCK DE MEXICO">GLOBAL FLOCK DE MEXICO</option>';
+            nom_estab_options_str  += '<option value="GLOBAL PLAYERYTEES">GLOBAL PLAYERYTEES</option>';
+            nom_estab_options_str  += '<option value="GLOBALIZACION METAL MECANICA PCMI">GLOBALIZACION METAL MECANICA PCMI</option>';
+            nom_estab_options_str  += '<option value="GOLDE PUEBLA">GOLDE PUEBLA</option>';
+            nom_estab_options_str  += '<option value="GONVAUTO PUEBLA">GONVAUTO PUEBLA</option>';
+            nom_estab_options_str  += '<option value="GORA CORPORATIVO EMPRESARIAL">GORA CORPORATIVO EMPRESARIAL</option>';
+            nom_estab_options_str  += '<option value="GRAMMER AUTOMOTIVE PUEBLA">GRAMMER AUTOMOTIVE PUEBLA</option>';
+            nom_estab_options_str  += '<option value="GRAMMTECNICA">GRAMMTECNICA</option>';
+            nom_estab_options_str  += '<option value="GRUPAK OPERACIONES">GRUPAK OPERACIONES</option>';
+            nom_estab_options_str  += '<option value="GRUPO ANTOLIN">GRUPO ANTOLIN</option>';
+            nom_estab_options_str  += '<option value="GRUPO CHANT">GRUPO CHANT</option>';
+            nom_estab_options_str  += '<option value="GRUPO CONVERMEX">GRUPO CONVERMEX</option>';
+            nom_estab_options_str  += '<option value="GRUPO EMPRESARIAL SALAVERRY">GRUPO EMPRESARIAL SALAVERRY</option>';
+            nom_estab_options_str  += '<option value="GRUPO EXIGRAFIC">GRUPO EXIGRAFIC</option>';
+            nom_estab_options_str  += '<option value="GRUPO GRAFICO EDITORIAL">GRUPO GRAFICO EDITORIAL</option>';
+            nom_estab_options_str  += '<option value="GRUPO GUSI">GRUPO GUSI</option>';
+            nom_estab_options_str  += '<option value="GRUPO IMESA">GRUPO IMESA</option>';
+            nom_estab_options_str  += '<option value="GRUPO MARMEX">GRUPO MARMEX</option>';
+            nom_estab_options_str  += '<option value="GRUPO PLASTICOLORES">GRUPO PLASTICOLORES</option>';
+            nom_estab_options_str  += '<option value="GRUPO PORTATEX">GRUPO PORTATEX</option>';
+            nom_estab_options_str  += '<option value="GRUPO PPYG DE MEXICO">GRUPO PPYG DE MEXICO</option>';
+            nom_estab_options_str  += '<option value="GRUPO RDA">GRUPO RDA</option>';
+            nom_estab_options_str  += '<option value="GRUPO TEXTIL CORPORACION DE NO TEJIDO AR">GRUPO TEXTIL CORPORACION DE NO TEJIDO AR</option>';
+            nom_estab_options_str  += '<option value="GRUPO TEXTIL PROVIDENCIA">GRUPO TEXTIL PROVIDENCIA</option>';
+            nom_estab_options_str  += '<option value="GUDERSON CONCARRIL">GUDERSON CONCARRIL</option>';
+            nom_estab_options_str  += '<option value="HARBENIT">HARBENIT</option>';
+            nom_estab_options_str  += '<option value="HARINERA EL PARAISO">HARINERA EL PARAISO</option>';
+            nom_estab_options_str  += '<option value="HBPO MEXICO">HBPO MEXICO</option>';
+            nom_estab_options_str  += '<option value="HERA APPAREL">HERA APPAREL</option>';
+            nom_estab_options_str  += '<option value="HERGO">HERGO</option>';
+            nom_estab_options_str  += '<option value="HERRAMIENTAS STANLEY">HERRAMIENTAS STANLEY</option>';
+            nom_estab_options_str  += '<option value="HIDRA TEXTIL">HIDRA TEXTIL</option>';
+            nom_estab_options_str  += '<option value="HILADOS COLE">HILADOS COLE</option>';
+            nom_estab_options_str  += '<option value="HILADOS EGARA">HILADOS EGARA</option>';
+            nom_estab_options_str  += '<option value="HILALTEG">HILALTEG</option>';
+            nom_estab_options_str  += '<option value="HILATURAS ELSA">HILATURAS ELSA</option>';
+            nom_estab_options_str  += '<option value="HILATURAS ESLA">HILATURAS ESLA</option>';
+            nom_estab_options_str  += '<option value="HILATURAS LOS ANGELES">HILATURAS LOS ANGELES</option>';
+            nom_estab_options_str  += '<option value="HILATURAS MIG">HILATURAS MIG</option>';
+            nom_estab_options_str  += '<option value="HILOS CLAUDIA">HILOS CLAUDIA</option>';
+            nom_estab_options_str  += '<option value="HILOS JOPERVIL">HILOS JOPERVIL</option>';
+            nom_estab_options_str  += '<option value="HILOS POLICOLOR">HILOS POLICOLOR</option>';
+            nom_estab_options_str  += '<option value="HJ EXHI BIMUEBLES">HJ EXHI BIMUEBLES</option>';
+            nom_estab_options_str  += '<option value="HJ EXHIBI MUEBLES">HJ EXHIBI MUEBLES</option>';
+            nom_estab_options_str  += '<option value="HOME TEXTILE DESIGNS">HOME TEXTILE DESIGNS</option>';
+            nom_estab_options_str  += '<option value="HOVOMEX">HOVOMEX</option>';
+            nom_estab_options_str  += '<option value="HUEJOTEXTIL">HUEJOTEXTIL</option>';
+            nom_estab_options_str  += '<option value="HUF MEXICO">HUF MEXICO</option>';
+            nom_estab_options_str  += '<option value="HULES ESPECIALIZADOS LUCTANIA">HULES ESPECIALIZADOS LUCTANIA</option>';
+            nom_estab_options_str  += '<option value="HUTSCH">HUTSCH</option>';
+            nom_estab_options_str  += '<option value="IACSA">IACSA</option>';
+            nom_estab_options_str  += '<option value="IBAYRO INDUSTRIAL">IBAYRO INDUSTRIAL</option>';
+            nom_estab_options_str  += '<option value="IKA TEXTIL">IKA TEXTIL</option>';
+            nom_estab_options_str  += '<option value="IMPULSORA TLAXCALTELCA DE INDUSTRIAS">IMPULSORA TLAXCALTELCA DE INDUSTRIAS</option>';
+            nom_estab_options_str  += '<option value="IMS COMERCIALIZADORA Y FABRICACION DE CALIDAD">IMS COMERCIALIZADORA Y FABRICACION DE CALIDAD</option>';
+            nom_estab_options_str  += '<option value="INDESTEC">INDESTEC</option>';
+            nom_estab_options_str  += '<option value="INDUSTRIA DE ACOPIO Y RESICLAGE">INDUSTRIA DE ACOPIO Y RESICLAGE</option>';
+            nom_estab_options_str  += '<option value="INDUSTRIA MANUFACTURERA DTI">INDUSTRIA MANUFACTURERA DTI</option>';
+            nom_estab_options_str  += '<option value="INDUSTRIA OVAL TEXTIL">INDUSTRIA OVAL TEXTIL</option>';
+            nom_estab_options_str  += '<option value="INDUSTRIA QUIMICA DEL ISTMO">INDUSTRIA QUIMICA DEL ISTMO</option>';
+            nom_estab_options_str  += '<option value="INDUSTRIAL CARTONERA DE CHOLULA">INDUSTRIAL CARTONERA DE CHOLULA</option>';
+            nom_estab_options_str  += '<option value="INDUSTRIAL DE ALAMBRES">INDUSTRIAL DE ALAMBRES</option>';
+            nom_estab_options_str  += '<option value="INDUSTRIAL SOBASA">INDUSTRIAL SOBASA</option>';
+            nom_estab_options_str  += '<option value="INDUSTRIAL TAMTO DE PUEBLA">INDUSTRIAL TAMTO DE PUEBLA</option>';
+            nom_estab_options_str  += '<option value="INDUSTRIAL TEXTIL DE PUEBLA">INDUSTRIAL TEXTIL DE PUEBLA</option>';
+            nom_estab_options_str  += '<option value="INDUSTRIAS ARRA">INDUSTRIAS ARRA</option>';
+            nom_estab_options_str  += '<option value="INDUSTRIAS CASTAN">INDUSTRIAS CASTAN</option>';
+            nom_estab_options_str  += '<option value="INDUSTRIAS CHILIAN">INDUSTRIAS CHILIAN</option>';
+            nom_estab_options_str  += '<option value="INDUSTRIAS COBITEL">INDUSTRIAS COBITEL</option>';
+            nom_estab_options_str  += '<option value="INDUSTRIAS COBRAMEX">INDUSTRIAS COBRAMEX</option>';
+            nom_estab_options_str  += '<option value="INDUSTRIAS DERIVADAS DE ETILENO">INDUSTRIAS DERIVADAS DE ETILENO</option>';
+            nom_estab_options_str  += '<option value="INDUSTRIAS IMPERIO">INDUSTRIAS IMPERIO</option>';
+            nom_estab_options_str  += '<option value="INDUSTRIAS KDA">INDUSTRIAS KDA</option>';
+            nom_estab_options_str  += '<option value="INDUSTRIAS MAQUIN">INDUSTRIAS MAQUIN</option>';
+            nom_estab_options_str  += '<option value="INDUSTRIAS NORM">INDUSTRIAS NORM</option>';
+            nom_estab_options_str  += '<option value="INDUSTRIAS NOVACERAMIC S">INDUSTRIAS NOVACERAMIC S</option>';
+            nom_estab_options_str  += '<option value="INDUSTRIAS RAGAR">INDUSTRIAS RAGAR</option>';
+            nom_estab_options_str  += '<option value="INDUSTRIAS SEA">INDUSTRIAS SEA</option>';
+            nom_estab_options_str  += '<option value="INDUSTRIAS UNIDAS MARITEX">INDUSTRIAS UNIDAS MARITEX</option>';
+            nom_estab_options_str  += '<option value="INFRAESTRUCTURA DE CONSTRUCCIONES TOXQUI">INFRAESTRUCTURA DE CONSTRUCCIONES TOXQUI</option>';
+            nom_estab_options_str  += '<option value="INGENIERIA EN PLASTICO DE PUEBLA">INGENIERIA EN PLASTICO DE PUEBLA</option>';
+            nom_estab_options_str  += '<option value="INMOBILIARIA ALPAMAYO">INMOBILIARIA ALPAMAYO</option>';
+            nom_estab_options_str  += '<option value="INNO BOX PACKAGING">INNO BOX PACKAGING</option>';
+            nom_estab_options_str  += '<option value="INNOFA MEXICO">INNOFA MEXICO</option>';
+            nom_estab_options_str  += '<option value="INSERTEX">INSERTEX</option>';
+            nom_estab_options_str  += '<option value="INTEMEC">INTEMEC</option>';
+            nom_estab_options_str  += '<option value="INTER MAQ CNC">INTER MAQ CNC</option>';
+            nom_estab_options_str  += '<option value="INTERAUTO SUNSHADE AND PLASTIC DIVISION">INTERAUTO SUNSHADE AND PLASTIC DIVISION</option>';
+            nom_estab_options_str  += '<option value="INTERNATIONAL PAPER PUEBLA">INTERNATIONAL PAPER PUEBLA</option>';
+            nom_estab_options_str  += '<option value="INYECCION DE PLASTICOS XICOTENCATL">INYECCION DE PLASTICOS XICOTENCATL</option>';
+            nom_estab_options_str  += '<option value="INYECCION Y ESPUMADO AUTOMOTRIZ DE MEXICO">INYECCION Y ESPUMADO AUTOMOTRIZ DE MEXICO</option>';
+            nom_estab_options_str  += '<option value="IQCHEMICALS & LABS">IQCHEMICALS & LABS</option>';
+            nom_estab_options_str  += '<option value="ISMA DE MEXICO">ISMA DE MEXICO</option>';
+            nom_estab_options_str  += '<option value="JANSSEN CILAG">JANSSEN CILAG</option>';
+            nom_estab_options_str  += '<option value="JARCIERIA JM">JARCIERIA JM</option>';
+            nom_estab_options_str  += '<option value="JB PROYECTA Y FABRICA">JB PROYECTA Y FABRICA</option>';
+            nom_estab_options_str  += '<option value="JER MEX">JER MEX</option>';
+            nom_estab_options_str  += '<option value="JET CONFECCIONES">JET CONFECCIONES</option>';
+            nom_estab_options_str  += '<option value="JOFEL CFS BRANDS">JOFEL CFS BRANDS</option>';
+            nom_estab_options_str  += '<option value="JOPP AUTOMOTIVE DE MEXICO">JOPP AUTOMOTIVE DE MEXICO</option>';
+            nom_estab_options_str  += '<option value="JUMBO">JUMBO</option>';
+            nom_estab_options_str  += '<option value="K16 TRADICION MEXICANA EN MADERA MUEBLE Y FORJA">K16 TRADICION MEXICANA EN MADERA MUEBLE Y FORJA</option>';
+            nom_estab_options_str  += '<option value="KAUFEN SOLUCIONES Y ETIQUETAS">KAUFEN SOLUCIONES Y ETIQUETAS</option>';
+            nom_estab_options_str  += '<option value="KAUTEX TEXTRON DE MEXICO">KAUTEX TEXTRON DE MEXICO</option>';
+            nom_estab_options_str  += '<option value="KAY INTERNACIONAL">KAY INTERNACIONAL</option>';
+            nom_estab_options_str  += '<option value="KAYSER AUTOMOTIVE SYSTEMS">KAYSER AUTOMOTIVE SYSTEMS</option>';
+            nom_estab_options_str  += '<option value="KAYSER AUTOMOTIVE SYSTEMS BODEGA">KAYSER AUTOMOTIVE SYSTEMS BODEGA</option>';
+            nom_estab_options_str  += '<option value="KB COMPONENTS MEXICO">KB COMPONENTS MEXICO</option>';
+            nom_estab_options_str  += '<option value="KD COMPANY">KD COMPANY</option>';
+            nom_estab_options_str  += '<option value="KD ELIM">KD ELIM</option>';
+            nom_estab_options_str  += '<option value="KD FASHION">KD FASHION</option>';
+            nom_estab_options_str  += '<option value="KD GARMENT">KD GARMENT</option>';
+            nom_estab_options_str  += '<option value="KDF">KDF</option>';
+            nom_estab_options_str  += '<option value="KIEKERT DE MEXICO">KIEKERT DE MEXICO</option>';
+            nom_estab_options_str  += '<option value="KIMBERLY CLARK DE MEXICO PLANTA PUEBLA">KIMBERLY CLARK DE MEXICO PLANTA PUEBLA</option>';
+            nom_estab_options_str  += '<option value="KIMBERLY CLARK DE MEXICO PLANTA TLAXCALA">KIMBERLY CLARK DE MEXICO PLANTA TLAXCALA</option>';
+            nom_estab_options_str  += '<option value="KIRCHHOFF AUTOMOTIVE MEXICO">KIRCHHOFF AUTOMOTIVE MEXICO</option>';
+            nom_estab_options_str  += '<option value="KOLLER GROUP MEXICO">KOLLER GROUP MEXICO</option>';
+            nom_estab_options_str  += '<option value="LA ARTESA">LA ARTESA</option>';
+            nom_estab_options_str  += '<option value="LA FLOR DE PUEBLA">LA FLOR DE PUEBLA</option>';
+            nom_estab_options_str  += '<option value="LA ITALIANA">LA ITALIANA</option>';
+            nom_estab_options_str  += '<option value="LA LUZ">LA LUZ</option>';
+            nom_estab_options_str  += '<option value="LA PERLA HOMETEX">LA PERLA HOMETEX</option>';
+            nom_estab_options_str  += '<option value="LA POBLANA">LA POBLANA</option>';
+            nom_estab_options_str  += '<option value="LA REFORMA">LA REFORMA</option>';
+            nom_estab_options_str  += '<option value="LABORATORIOS PISA">LABORATORIOS PISA</option>';
+            nom_estab_options_str  += '<option value="LABORATORIOS QUIMICA SONS">LABORATORIOS QUIMICA SONS</option>';
+            nom_estab_options_str  += '<option value="LACTO PRODUCTOS LA PROVIDENCIA">LACTO PRODUCTOS LA PROVIDENCIA</option>';
+            nom_estab_options_str  += '<option value="LAMIPSA INDUSTRIAL">LAMIPSA INDUSTRIAL</option>';
+            nom_estab_options_str  += '<option value="LAMITEC">LAMITEC</option>';
+            nom_estab_options_str  += '<option value="LAMOSA PLANTA PAVILLION">LAMOSA PLANTA PAVILLION</option>';
+            nom_estab_options_str  += '<option value="LANERA MODERNA">LANERA MODERNA</option>';
+            nom_estab_options_str  += '<option value="LANERA NACIONAL">LANERA NACIONAL</option>';
+            nom_estab_options_str  += '<option value="LANERA TEXTIL">LANERA TEXTIL</option>';
+            nom_estab_options_str  += '<option value="LAPSOLITE PLASTICOS INDUSTRIALES">LAPSOLITE PLASTICOS INDUSTRIALES</option>';
+            nom_estab_options_str  += '<option value="LAVANDERIA Y TERMINADOS G C">LAVANDERIA Y TERMINADOS G C</option>';
+            nom_estab_options_str  += '<option value="LEAR">LEAR</option>';
+            nom_estab_options_str  += '<option value="LEAR CORPORATION MEXICO">LEAR CORPORATION MEXICO</option>';
+            nom_estab_options_str  += '<option value="LEAR PLANTA PANZACOLA">LEAR PLANTA PANZACOLA</option>';
+            nom_estab_options_str  += '<option value="LEONALI">LEONALI</option>';
+            nom_estab_options_str  += '<option value="LESTER">LESTER</option>';
+            nom_estab_options_str  += '<option value="LEYCA">LEYCA</option>';
+            nom_estab_options_str  += '<option value="LITOCALIDAD">LITOCALIDAD</option>';
+            nom_estab_options_str  += '<option value="LITOGRAFIA MAGNO GRAF">LITOGRAFIA MAGNO GRAF</option>';
+            nom_estab_options_str  += '<option value="LLACA TEXTIL">LLACA TEXTIL</option>';
+            nom_estab_options_str  += '<option value="LODANMEX">LODANMEX</option>';
+            nom_estab_options_str  += '<option value="LONAS LA PERSEVERANCIA">LONAS LA PERSEVERANCIA</option>';
+            nom_estab_options_str  += '<option value="LONDANMEX">LONDANMEX</option>';
+            nom_estab_options_str  += '<option value="LORMA">LORMA</option>';
+            nom_estab_options_str  += '<option value="LORPEN MEXICO">LORPEN MEXICO</option>';
+            nom_estab_options_str  += '<option value="LR MAQUILAS">LR MAQUILAS</option>';
+            nom_estab_options_str  += '<option value="LUK PUEBLA">LUK PUEBLA</option>';
+            nom_estab_options_str  += '<option value="LUNKOMEX">LUNKOMEX</option>';
+            nom_estab_options_str  += '<option value="MADERAS DECORATIVAS DE PUEBLA">MADERAS DECORATIVAS DE PUEBLA</option>';
+            nom_estab_options_str  += '<option value="MADERAS DECORATIVVAS DE PUEBLA">MADERAS DECORATIVVAS DE PUEBLA</option>';
+            nom_estab_options_str  += '<option value="MAGNA SEATING PUEBLA">MAGNA SEATING PUEBLA</option>';
+            nom_estab_options_str  += '<option value="MALTA TEXO DE MEXICO">MALTA TEXO DE MEXICO</option>';
+            nom_estab_options_str  += '<option value="MANANTIALES LA ASUNCION">MANANTIALES LA ASUNCION</option>';
+            nom_estab_options_str  += '<option value="MANUFACTURA BANCOR">MANUFACTURA BANCOR</option>';
+            nom_estab_options_str  += '<option value="MANUFACTURAS PATH">MANUFACTURAS PATH</option>';
+            nom_estab_options_str  += '<option value="MANUFACTURAS SAYES">MANUFACTURAS SAYES</option>';
+            nom_estab_options_str  += '<option value="MANUFACTURERA SIN NOMBRE">MANUFACTURERA SIN NOMBRE</option>';
+            nom_estab_options_str  += '<option value="MANUFACTURERA TEXTIL LA LYONESA">MANUFACTURERA TEXTIL LA LYONESA</option>';
+            nom_estab_options_str  += '<option value="MAQUILADORA DE ARTICULOS TEXTILES">MAQUILADORA DE ARTICULOS TEXTILES</option>';
+            nom_estab_options_str  += '<option value="MAQUILADORA DE CALZADO SAN FELIPE">MAQUILADORA DE CALZADO SAN FELIPE</option>';
+            nom_estab_options_str  += '<option value="MAQUILAS METALICAS SOLANA">MAQUILAS METALICAS SOLANA</option>';
+            nom_estab_options_str  += '<option value="MAQUINADO DE MADERAS DIANA">MAQUINADO DE MADERAS DIANA</option>';
+            nom_estab_options_str  += '<option value="MAQUINADOS DE PRECISION GOMEZ">MAQUINADOS DE PRECISION GOMEZ</option>';
+            nom_estab_options_str  += '<option value="MAQUINADOS INDUSTRIALES DE TLAXCALA">MAQUINADOS INDUSTRIALES DE TLAXCALA</option>';
+            nom_estab_options_str  += '<option value="MARBLE AND STONE LAMINADOS">MARBLE AND STONE LAMINADOS</option>';
+            nom_estab_options_str  += '<option value="MARTINTER">MARTINTER</option>';
+            nom_estab_options_str  += '<option value="MAYTESA">MAYTESA</option>';
+            nom_estab_options_str  += '<option value="MECATRONICA INGENIERIA Y FABRICACION  S.A. DE C.V.">MECATRONICA INGENIERIA Y FABRICACION  S.A. DE C.V.</option>';
+            nom_estab_options_str  += '<option value="MEPPSA">MEPPSA</option>';
+            nom_estab_options_str  += '<option value="MEPPSSA">MEPPSSA</option>';
+            nom_estab_options_str  += '<option value="METALCAST">METALCAST</option>';
+            nom_estab_options_str  += '<option value="METALOIDES">METALOIDES</option>';
+            nom_estab_options_str  += '<option value="METALURGICA ARTESANAL">METALURGICA ARTESANAL</option>';
+            nom_estab_options_str  += '<option value="METAPOL">METAPOL</option>';
+            nom_estab_options_str  += '<option value="MEX MODE">MEX MODE</option>';
+            nom_estab_options_str  += '<option value="MEX MODEN">MEX MODEN</option>';
+            nom_estab_options_str  += '<option value="MEXICAN PRODUCT FACTORY OF TROUSERS">MEXICAN PRODUCT FACTORY OF TROUSERS</option>';
+            nom_estab_options_str  += '<option value="MEXICAN SILICATES">MEXICAN SILICATES</option>';
+            nom_estab_options_str  += '<option value="MEXICANA DE INDUSTRIAS Y MARCAS">MEXICANA DE INDUSTRIAS Y MARCAS</option>';
+            nom_estab_options_str  += '<option value="MEXICANA DE MAQUINARIA DE PRECISION">MEXICANA DE MAQUINARIA DE PRECISION</option>';
+            nom_estab_options_str  += '<option value="MEXICHEM RESINAS VINILICAS">MEXICHEM RESINAS VINILICAS</option>';
+            nom_estab_options_str  += '<option value="MEXICO PAINTING">MEXICO PAINTING</option>';
+            nom_estab_options_str  += '<option value="MEXTRAUMA">MEXTRAUMA</option>';
+            nom_estab_options_str  += '<option value="MEZCAL OJO DE TIGRE">MEZCAL OJO DE TIGRE</option>';
+            nom_estab_options_str  += '<option value="MODA JN">MODA JN</option>';
+            nom_estab_options_str  += '<option value="MODA JN S.A. DE C.V.">MODA JN S.A. DE C.V.</option>';
+            nom_estab_options_str  += '<option value="MODA Y CONFECCION DE PUEBLA">MODA Y CONFECCION DE PUEBLA</option>';
+            nom_estab_options_str  += '<option value="MOELTEK">MOELTEK</option>';
+            nom_estab_options_str  += '<option value="MOLDEO Y CENTRIFUGADO DE METALES">MOLDEO Y CENTRIFUGADO DE METALES</option>';
+            nom_estab_options_str  += '<option value="MOLINO ARINERO SAN BLAS">MOLINO ARINERO SAN BLAS</option>';
+            nom_estab_options_str  += '<option value="MOLINO HARINERO SAN BLAS">MOLINO HARINERO SAN BLAS</option>';
+            nom_estab_options_str  += '<option value="MONTAPLAST AUTOMOTIVE SYSTEMS MEXICO">MONTAPLAST AUTOMOTIVE SYSTEMS MEXICO</option>';
+            nom_estab_options_str  += '<option value="MONTERAL TEJIDOS TEXTILES Y ALGO MAS">MONTERAL TEJIDOS TEXTILES Y ALGO MAS</option>';
+            nom_estab_options_str  += '<option value="MORPHOPLAST">MORPHOPLAST</option>';
+            nom_estab_options_str  += '<option value="MOTHERSON">MOTHERSON</option>';
+            nom_estab_options_str  += '<option value="MTM">MTM</option>';
+            nom_estab_options_str  += '<option value="MUEBLES RUSTICOS DE LA SIERRA">MUEBLES RUSTICOS DE LA SIERRA</option>';
+            nom_estab_options_str  += '<option value="MUEBLES RUSTICOS Y FORJADOS DE CHIPILO">MUEBLES RUSTICOS Y FORJADOS DE CHIPILO</option>';
+            nom_estab_options_str  += '<option value="MULLIERT">MULLIERT</option>';
+            nom_estab_options_str  += '<option value="MULTIACERO">MULTIACERO</option>';
+            nom_estab_options_str  += '<option value="MULTICOPIAS">MULTICOPIAS</option>';
+            nom_estab_options_str  += '<option value="MULTIPAK">MULTIPAK</option>';
+            nom_estab_options_str  += '<option value="MX PACKING">MX PACKING</option>';
+            nom_estab_options_str  += '<option value="MX-PD0435 APIZACO III">MX-PD0435 APIZACO III</option>';
+            nom_estab_options_str  += '<option value="NERO LUPO">NERO LUPO</option>';
+            nom_estab_options_str  += '<option value="NEUBER">NEUBER</option>';
+            nom_estab_options_str  += '<option value="NICRO BOLTA">NICRO BOLTA</option>';
+            nom_estab_options_str  += '<option value="NORM">NORM</option>';
+            nom_estab_options_str  += '<option value="NOVARES MEXICO">NOVARES MEXICO</option>';
+            nom_estab_options_str  += '<option value="NOVIDESA">NOVIDESA</option>';
+            nom_estab_options_str  += '<option value="NUTREBIEN">NUTREBIEN</option>';
+            nom_estab_options_str  += '<option value="OCOTEX">OCOTEX</option>';
+            nom_estab_options_str  += '<option value="OCV MEXICO">OCV MEXICO</option>';
+            nom_estab_options_str  += '<option value="ODW ELEKTRIK MEXICO">ODW ELEKTRIK MEXICO</option>';
+            nom_estab_options_str  += '<option value="OMEX ALIMENTARIA">OMEX ALIMENTARIA</option>';
+            nom_estab_options_str  += '<option value="OSIRIS TEXTIL">OSIRIS TEXTIL</option>';
+            nom_estab_options_str  += '<option value="OVOMEX">OVOMEX</option>';
+            nom_estab_options_str  += '<option value="OXIQUIMICA">OXIQUIMICA</option>';
+            nom_estab_options_str  += '<option value="P Y T TEXTIL">P Y T TEXTIL</option>';
+            nom_estab_options_str  += '<option value="PAMPA MUEBLES DE MADERA">PAMPA MUEBLES DE MADERA</option>';
+            nom_estab_options_str  += '<option value="PANELART CENTER">PANELART CENTER</option>';
+            nom_estab_options_str  += '<option value="PANIFICADORA JUGARSU">PANIFICADORA JUGARSU</option>';
+            nom_estab_options_str  += '<option value="PAR PINTURAS">PAR PINTURAS</option>';
+            nom_estab_options_str  += '<option value="PASTELER8A LECAROZ">PASTELER8A LECAROZ</option>';
+            nom_estab_options_str  += '<option value="PASTELERIA BON DESSERT">PASTELERIA BON DESSERT</option>';
+            nom_estab_options_str  += '<option value="PASTELERIA SIN NOMBRE">PASTELERIA SIN NOMBRE</option>';
+            nom_estab_options_str  += '<option value="PASTELES CAPY">PASTELES CAPY</option>';
+            nom_estab_options_str  += '<option value="PASTISSERIA GALLELIS">PASTISSERIA GALLELIS</option>';
+            nom_estab_options_str  += '<option value="PAVIMENTOS ASFALTICOS ANGELOPOLITANOS">PAVIMENTOS ASFALTICOS ANGELOPOLITANOS</option>';
+            nom_estab_options_str  += '<option value="PELIKAN">PELIKAN</option>';
+            nom_estab_options_str  += '<option value="PELZER DE MEXICO">PELZER DE MEXICO</option>';
+            nom_estab_options_str  += '<option value="PERFORMANCE PACKAGING">PERFORMANCE PACKAGING</option>';
+            nom_estab_options_str  += '<option value="PERMA CHEF">PERMA CHEF</option>';
+            nom_estab_options_str  += '<option value="PILU UNIFORMES">PILU UNIFORMES</option>';
+            nom_estab_options_str  += '<option value="PINTUMEX">PINTUMEX</option>';
+            nom_estab_options_str  += '<option value="PLAMI">PLAMI</option>';
+            nom_estab_options_str  += '<option value="PLANEACION INGENIERIA Y MANTENIMIENTO INDUSTRIAL">PLANEACION INGENIERIA Y MANTENIMIENTO INDUSTRIAL</option>';
+            nom_estab_options_str  += '<option value="PLANTA APIZACO">PLANTA APIZACO</option>';
+            nom_estab_options_str  += '<option value="PLANTA CEDIS PUEBLA">PLANTA CEDIS PUEBLA</option>';
+            nom_estab_options_str  += '<option value="PLANTA DE PRODUCCI0N">PLANTA DE PRODUCCI0N</option>';
+            nom_estab_options_str  += '<option value="PLASTIC OMNIUM AUTO EXTERIORES">PLASTIC OMNIUM AUTO EXTERIORES</option>';
+            nom_estab_options_str  += '<option value="PLASTICOS DIANA">PLASTICOS DIANA</option>';
+            nom_estab_options_str  += '<option value="PLASTICOS ESPECIALES GAREN">PLASTICOS ESPECIALES GAREN</option>';
+            nom_estab_options_str  += '<option value="PLASTICOS SAL">PLASTICOS SAL</option>';
+            nom_estab_options_str  += '<option value="PLASTICOS Y MANUFACTURAS LOGYM">PLASTICOS Y MANUFACTURAS LOGYM</option>';
+            nom_estab_options_str  += '<option value="PLASTICOS Y MECANICA">PLASTICOS Y MECANICA</option>';
+            nom_estab_options_str  += '<option value="PLASTIFABRICA">PLASTIFABRICA</option>';
+            nom_estab_options_str  += '<option value="PLASTIKA">PLASTIKA</option>';
+            nom_estab_options_str  += '<option value="PLASTINDUS">PLASTINDUS</option>';
+            nom_estab_options_str  += '<option value="PMCO DE PUEBLA">PMCO DE PUEBLA</option>';
+            nom_estab_options_str  += '<option value="POIN">POIN</option>';
+            nom_estab_options_str  += '<option value="POLAQUIMIA">POLAQUIMIA</option>';
+            nom_estab_options_str  += '<option value="POLITEL">POLITEL</option>';
+            nom_estab_options_str  += '<option value="POLIURETANOS SW PUEBLA">POLIURETANOS SW PUEBLA</option>';
+            nom_estab_options_str  += '<option value="PORCELANITE LAMOSA PLANTA GRES">PORCELANITE LAMOSA PLANTA GRES</option>';
+            nom_estab_options_str  += '<option value="PORCELANITE LAMOSA PLANTA PORCEL">PORCELANITE LAMOSA PLANTA PORCEL</option>';
+            nom_estab_options_str  += '<option value="POSCO MPPC">POSCO MPPC</option>';
+            nom_estab_options_str  += '<option value="POSSEHL ELECTRONICS PUEBLA">POSSEHL ELECTRONICS PUEBLA</option>';
+            nom_estab_options_str  += '<option value="POSTRES FINOS">POSTRES FINOS</option>';
+            nom_estab_options_str  += '<option value="PRALTEC">PRALTEC</option>';
+            nom_estab_options_str  += '<option value="PRECISION RIDE BY JC ENG">PRECISION RIDE BY JC ENG</option>';
+            nom_estab_options_str  += '<option value="PREFABRICADOS DE CONCRETO SOLANA">PREFABRICADOS DE CONCRETO SOLANA</option>';
+            nom_estab_options_str  += '<option value="PRENTEL">PRENTEL</option>';
+            nom_estab_options_str  += '<option value="PRESFORZA">PRESFORZA</option>';
+            nom_estab_options_str  += '<option value="PRESS AND SINTER TECHNICS DE MEXICO">PRESS AND SINTER TECHNICS DE MEXICO</option>';
+            nom_estab_options_str  += '<option value="PRINCOARVI SA DE CV">PRINCOARVI SA DE CV</option>';
+            nom_estab_options_str  += '<option value="PROCESADORA DE ALIMENTOS CIMA">PROCESADORA DE ALIMENTOS CIMA</option>';
+            nom_estab_options_str  += '<option value="PROCESO DE TERMINADO DE PRENDAS DE VESTIR SIN NOMBRE">PROCESO DE TERMINADO DE PRENDAS DE VESTIR SIN NOMBRE</option>';
+            nom_estab_options_str  += '<option value="PROCESO Y MONTAJE INDUSTRIAL DASA">PROCESO Y MONTAJE INDUSTRIAL DASA</option>';
+            nom_estab_options_str  += '<option value="PRODUCTOS ARA">PRODUCTOS ARA</option>';
+            nom_estab_options_str  += '<option value="PRODUCTOS GABI">PRODUCTOS GABI</option>';
+            nom_estab_options_str  += '<option value="PRODUCTOS INTERNACIONALES MABE">PRODUCTOS INTERNACIONALES MABE</option>';
+            nom_estab_options_str  += '<option value="PRODUCTOS MONDELEZ PLANTA PUEBLA">PRODUCTOS MONDELEZ PLANTA PUEBLA</option>';
+            nom_estab_options_str  += '<option value="PROMOCIONALES CAMARIN">PROMOCIONALES CAMARIN</option>';
+            nom_estab_options_str  += '<option value="PULSEN CORPORATIVO SA DE CV">PULSEN CORPORATIVO SA DE CV</option>';
+            nom_estab_options_str  += '<option value="PUNTA DEL CIELO">PUNTA DEL CIELO</option>';
+            nom_estab_options_str  += '<option value="PUNZO MEX">PUNZO MEX</option>';
+            nom_estab_options_str  += '<option value="PWO DE MEXICO">PWO DE MEXICO</option>';
+            nom_estab_options_str  += '<option value="PYT TEXTIL">PYT TEXTIL</option>';
+            nom_estab_options_str  += '<option value="QUALAMEX">QUALAMEX</option>';
+            nom_estab_options_str  += '<option value="QUALITY PABISAN">QUALITY PABISAN</option>';
+            nom_estab_options_str  += '<option value="QUALITY SEW">QUALITY SEW</option>';
+            nom_estab_options_str  += '<option value="QUIMICA HERNANDEZ RAMIREZ">QUIMICA HERNANDEZ RAMIREZ</option>';
+            nom_estab_options_str  += '<option value="QURATEX">QURATEX</option>';
+            nom_estab_options_str  += '<option value="RACKS & DUNNAGE AUTOMOTIVE SOLUTION MEXICO">RACKS & DUNNAGE AUTOMOTIVE SOLUTION MEXICO</option>';
+            nom_estab_options_str  += '<option value="RASSINI FRENOS">RASSINI FRENOS</option>';
+            nom_estab_options_str  += '<option value="RASTRO  MUNICIPAL SAN MARTIN TEXMELUCAN PUE.">RASTRO  MUNICIPAL SAN MARTIN TEXMELUCAN PUE.</option>';
+            nom_estab_options_str  += '<option value="RASTRO MUNICIPAL DE  SAN MARTIN TEXMELUCAN">RASTRO MUNICIPAL DE  SAN MARTIN TEXMELUCAN</option>';
+            nom_estab_options_str  += '<option value="RASTRO MUNICIPAL DE PUEBLA">RASTRO MUNICIPAL DE PUEBLA</option>';
+            nom_estab_options_str  += '<option value="READY SET">READY SET</option>';
+            nom_estab_options_str  += '<option value="REGENERADOS TLAXCALA">REGENERADOS TLAXCALA</option>';
+            nom_estab_options_str  += '<option value="REMOLQUES AUTOMOTRICES">REMOLQUES AUTOMOTRICES</option>';
+            nom_estab_options_str  += '<option value="RESINAS Y ALMIDONES INTERNACIONALES">RESINAS Y ALMIDONES INTERNACIONALES</option>';
+            nom_estab_options_str  += '<option value="RESIRENE">RESIRENE</option>';
+            nom_estab_options_str  += '<option value="REYPER">REYPER</option>';
+            nom_estab_options_str  += '<option value="RG REFRESCO EMBOTELLADORA DE MEXICO">RG REFRESCO EMBOTELLADORA DE MEXICO</option>';
+            nom_estab_options_str  += '<option value="RIMABELL CONFECCIONES">RIMABELL CONFECCIONES</option>';
+            nom_estab_options_str  += '<option value="RIO SUL">RIO SUL</option>';
+            nom_estab_options_str  += '<option value="ROBRITEX">ROBRITEX</option>';
+            nom_estab_options_str  += '<option value="ROCACERO MEXICO">ROCACERO MEXICO</option>';
+            nom_estab_options_str  += '<option value="ROSAN INTERNACIONAL">ROSAN INTERNACIONAL</option>';
+            nom_estab_options_str  += '<option value="RUSTICOS FUTURA">RUSTICOS FUTURA</option>';
+            nom_estab_options_str  += '<option value="RYC ALIMENTOS">RYC ALIMENTOS</option>';
+            nom_estab_options_str  += '<option value="SA AUTOMOTIVE">SA AUTOMOTIVE</option>';
+            nom_estab_options_str  += '<option value="SAAP APPARELES">SAAP APPARELES</option>';
+            nom_estab_options_str  += '<option value="SABORMEX">SABORMEX</option>';
+            nom_estab_options_str  += '<option value="SAINT GOBAIN AMERICA">SAINT GOBAIN AMERICA</option>';
+            nom_estab_options_str  += '<option value="SALCHICHONERIA FRITZ">SALCHICHONERIA FRITZ</option>';
+            nom_estab_options_str  += '<option value="SAM">SAM</option>';
+            nom_estab_options_str  += '<option value="SAMVARDANA MOTHERSON INNOVATIVE AUTOSYSTEM DE MEXICO">SAMVARDANA MOTHERSON INNOVATIVE AUTOSYSTEM DE MEXICO</option>';
+            nom_estab_options_str  += '<option value="SANTA FE HACIENDA FURNITURE">SANTA FE HACIENDA FURNITURE</option>';
+            nom_estab_options_str  += '<option value="SANTA FE MILLS">SANTA FE MILLS</option>';
+            nom_estab_options_str  += '<option value="SANTA JULIA DE PUEBLA">SANTA JULIA DE PUEBLA</option>';
+            nom_estab_options_str  += '<option value="SAS AUTOMOTIVE SYSTEMS">SAS AUTOMOTIVE SYSTEMS</option>';
+            nom_estab_options_str  += '<option value="SAVAL DE MEXICO">SAVAL DE MEXICO</option>';
+            nom_estab_options_str  += '<option value="SCHNEIDER INDUSTRIAL TLAXCALA">SCHNEIDER INDUSTRIAL TLAXCALA</option>';
+            nom_estab_options_str  += '<option value="SE BORDNETZE MEXICO">SE BORDNETZE MEXICO</option>';
+            nom_estab_options_str  += '<option value="SEAMLESS GLOBAL SOLUTIONS">SEAMLESS GLOBAL SOLUTIONS</option>';
+            nom_estab_options_str  += '<option value="SENVATEX">SENVATEX</option>';
+            nom_estab_options_str  += '<option value="SERVICIOS INTEGRADOS DE ENVASADO">SERVICIOS INTEGRADOS DE ENVASADO</option>';
+            nom_estab_options_str  += '<option value="SERVICIOS LATINOAMERICANOS GC">SERVICIOS LATINOAMERICANOS GC</option>';
+            nom_estab_options_str  += '<option value="SERVICIOS PROFESIONALES EN MOVIMIENTO">SERVICIOS PROFESIONALES EN MOVIMIENTO</option>';
+            nom_estab_options_str  += '<option value="SHELBY MANUFACTURING DE MEXICO">SHELBY MANUFACTURING DE MEXICO</option>';
+            nom_estab_options_str  += '<option value="SHELL PRIDE">SHELL PRIDE</option>';
+            nom_estab_options_str  += '<option value="SIBERICA SALAS">SIBERICA SALAS</option>';
+            nom_estab_options_str  += '<option value="SICLIMA">SICLIMA</option>';
+            nom_estab_options_str  += '<option value="SILVER TEXTIL POBLANA">SILVER TEXTIL POBLANA</option>';
+            nom_estab_options_str  += '<option value="SIMEC INTERNATIONAL 6">SIMEC INTERNATIONAL 6</option>';
+            nom_estab_options_str  += '<option value="SINOCERAS">SINOCERAS</option>';
+            nom_estab_options_str  += '<option value="SINTESIS ORGANICAS">SINTESIS ORGANICAS</option>';
+            nom_estab_options_str  += '<option value="SINTESIS Y PROCESADOS DE MEXICO">SINTESIS Y PROCESADOS DE MEXICO</option>';
+            nom_estab_options_str  += '<option value="SKF">SKF</option>';
+            nom_estab_options_str  += '<option value="SKYFELT">SKYFELT</option>';
+            nom_estab_options_str  += '<option value="SKYTEX MEXICO">SKYTEX MEXICO</option>';
+            nom_estab_options_str  += '<option value="SMI PET MEXICO">SMI PET MEXICO</option>';
+            nom_estab_options_str  += '<option value="SOCIEDAD COOPERATIVA DE PRODUCCION SANTA CRUZ GUADALUPE">SOCIEDAD COOPERATIVA DE PRODUCCION SANTA CRUZ GUADALUPE</option>';
+            nom_estab_options_str  += '<option value="SOLA TEXTIL">SOLA TEXTIL</option>';
+            nom_estab_options_str  += '<option value="SOLANA ACEROS Y SOLDADURAS">SOLANA ACEROS Y SOLDADURAS</option>';
+            nom_estab_options_str  += '<option value="SOLAR MEDICAL">SOLAR MEDICAL</option>';
+            nom_estab_options_str  += '<option value="SOLDADURA Y PAILERIA INDUSTRIAL">SOLDADURA Y PAILERIA INDUSTRIAL</option>';
+            nom_estab_options_str  += '<option value="SOLER Y PALAU">SOLER Y PALAU</option>';
+            nom_estab_options_str  += '<option value="SOLUCIONES INTELIGENTES EN EMBALAJE">SOLUCIONES INTELIGENTES EN EMBALAJE</option>';
+            nom_estab_options_str  += '<option value="SOLUCIONES SE0ALETICAS">SOLUCIONES SE0ALETICAS</option>';
+            nom_estab_options_str  += '<option value="SOLUSUR MEXICO">SOLUSUR MEXICO</option>';
+            nom_estab_options_str  += '<option value="SOLUTIA TLAXCALA">SOLUTIA TLAXCALA</option>';
+            nom_estab_options_str  += '<option value="SOMATICS DE MEXICO">SOMATICS DE MEXICO</option>';
+            nom_estab_options_str  += '<option value="SPECIALITY WEAR & ACCESORIES">SPECIALITY WEAR & ACCESORIES</option>';
+            nom_estab_options_str  += '<option value="SPONGE TECHNOLOGY COORPORATION">SPONGE TECHNOLOGY COORPORATION</option>';
+            nom_estab_options_str  += '<option value="SSIISA">SSIISA</option>';
+            nom_estab_options_str  += '<option value="SSISA">SSISA</option>';
+            nom_estab_options_str  += '<option value="STEZAN MUEBLES">STEZAN MUEBLES</option>';
+            nom_estab_options_str  += '<option value="STONE CER">STONE CER</option>';
+            nom_estab_options_str  += '<option value="SUPER AGUA">SUPER AGUA</option>';
+            nom_estab_options_str  += '<option value="SUPER COTTON">SUPER COTTON</option>';
+            nom_estab_options_str  += '<option value="SUPERLASER & FIXTURES">SUPERLASER & FIXTURES</option>';
+            nom_estab_options_str  += '<option value="SUTSA PRINT DE MEXICO SUC PUEBLA">SUTSA PRINT DE MEXICO SUC PUEBLA</option>';
+            nom_estab_options_str  += '<option value="SWISS">SWISS</option>';
+            nom_estab_options_str  += '<option value="SYBRIEDGE TECHNOLOGIES">SYBRIEDGE TECHNOLOGIES</option>';
+            nom_estab_options_str  += '<option value="TABIQUES Y LADRILLOS MODERNOS">TABIQUES Y LADRILLOS MODERNOS</option>';
+            nom_estab_options_str  += '<option value="TALLER DE ARMADO DE PIEZAS PARA ROPA SIN NOMDRE">TALLER DE ARMADO DE PIEZAS PARA ROPA SIN NOMDRE</option>';
+            nom_estab_options_str  += '<option value="TALLER DE COSTURA B & D MANUFACTURY">TALLER DE COSTURA B & D MANUFACTURY</option>';
+            nom_estab_options_str  += '<option value="TALLER DE COSTURA SIN NOMBRE">TALLER DE COSTURA SIN NOMBRE</option>';
+            nom_estab_options_str  += '<option value="TALLER DE COSTURA VICTOTEX">TALLER DE COSTURA VICTOTEX</option>';
+            nom_estab_options_str  += '<option value="TALLER DE FABRICACION DENTAL FASHIDEN">TALLER DE FABRICACION DENTAL FASHIDEN</option>';
+            nom_estab_options_str  += '<option value="TALLER DE HERRERIA SEMIDIASA">TALLER DE HERRERIA SEMIDIASA</option>';
+            nom_estab_options_str  += '<option value="TALLER DE MAQUILA">TALLER DE MAQUILA</option>';
+            nom_estab_options_str  += '<option value="TALLER DE MAQUILA DE ROPA MULTIESTILOS MASS">TALLER DE MAQUILA DE ROPA MULTIESTILOS MASS</option>';
+            nom_estab_options_str  += '<option value="TALLER DE TORNO">TALLER DE TORNO</option>';
+            nom_estab_options_str  += '<option value="TALLERES MECANICOS MONTSERRAT">TALLERES MECANICOS MONTSERRAT</option>';
+            nom_estab_options_str  += '<option value="TAURO TEXTIL">TAURO TEXTIL</option>';
+            nom_estab_options_str  += '<option value="TB&C OUTSERT MEXICO">TB&C OUTSERT MEXICO</option>';
+            nom_estab_options_str  += '<option value="TBP">TBP</option>';
+            nom_estab_options_str  += '<option value="TECMA">TECMA</option>';
+            nom_estab_options_str  += '<option value="TECMAQ">TECMAQ</option>';
+            nom_estab_options_str  += '<option value="TECNIACRIL">TECNIACRIL</option>';
+            nom_estab_options_str  += '<option value="TECNODENIM">TECNODENIM</option>';
+            nom_estab_options_str  += '<option value="TECNOPAK">TECNOPAK</option>';
+            nom_estab_options_str  += '<option value="TECNOPLAST ECOLOGICO">TECNOPLAST ECOLOGICO</option>';
+            nom_estab_options_str  += '<option value="TEFLU">TEFLU</option>';
+            nom_estab_options_str  += '<option value="TEJIDO PUNTO TEXTIL">TEJIDO PUNTO TEXTIL</option>';
+            nom_estab_options_str  += '<option value="TEJIDOS PARA EL DEPORTE">TEJIDOS PARA EL DEPORTE</option>';
+            nom_estab_options_str  += '<option value="TELAS DEL CONTINENTE">TELAS DEL CONTINENTE</option>';
+            nom_estab_options_str  += '<option value="TELLER DE COSTURA SIN NOMBRE">TELLER DE COSTURA SIN NOMBRE</option>';
+            nom_estab_options_str  += '<option value="TELLEZ ONIX">TELLEZ ONIX</option>';
+            nom_estab_options_str  += '<option value="TEMNIDOS MORLIM">TEMNIDOS MORLIM</option>';
+            nom_estab_options_str  += '<option value="TENNECO">TENNECO</option>';
+            nom_estab_options_str  += '<option value="TENNECO FINSA">TENNECO FINSA</option>';
+            nom_estab_options_str  += '<option value="TENSOTEC">TENSOTEC</option>';
+            nom_estab_options_str  += '<option value="TERMOLUC">TERMOLUC</option>';
+            nom_estab_options_str  += '<option value="TERNIUM LARGOS PUEBLA">TERNIUM LARGOS PUEBLA</option>';
+            nom_estab_options_str  += '<option value="TERRAMAR MARMOL">TERRAMAR MARMOL</option>';
+            nom_estab_options_str  += '<option value="TEXTILES BRITO">TEXTILES BRITO</option>';
+            nom_estab_options_str  += '<option value="TEXTILES FORCA">TEXTILES FORCA</option>';
+            nom_estab_options_str  += '<option value="TEXTILES FRANKS">TEXTILES FRANKS</option>';
+            nom_estab_options_str  += '<option value="TEXTILES LA ALSACIANA">TEXTILES LA ALSACIANA</option>';
+            nom_estab_options_str  += '<option value="TEXTILES LA LIBERTAD">TEXTILES LA LIBERTAD</option>';
+            nom_estab_options_str  += '<option value="TEXTILES MARIE LOU">TEXTILES MARIE LOU</option>';
+            nom_estab_options_str  += '<option value="TEXTILES MONT BLANC">TEXTILES MONT BLANC</option>';
+            nom_estab_options_str  += '<option value="TEXTILES PAVID">TEXTILES PAVID</option>';
+            nom_estab_options_str  += '<option value="TEXTILES QUIRURGICOS">TEXTILES QUIRURGICOS</option>';
+            nom_estab_options_str  += '<option value="TEXTILES YORDAS">TEXTILES YORDAS</option>';
+            nom_estab_options_str  += '<option value="TEXTILEX TENEXAC">TEXTILEX TENEXAC</option>';
+            nom_estab_options_str  += '<option value="THIMM PACKAGING SYSTEMS">THIMM PACKAGING SYSTEMS</option>';
+            nom_estab_options_str  += '<option value="THYSSENKRUPP AUTOMOTIVE SYSTEMS DE MEXICO">THYSSENKRUPP AUTOMOTIVE SYSTEMS DE MEXICO</option>';
+            nom_estab_options_str  += '<option value="THYSSENKRUPP MATERIALS DE MEXICO">THYSSENKRUPP MATERIALS DE MEXICO</option>';
+            nom_estab_options_str  += '<option value="THYSSENKRUPP METALURGICA DE MEXICO">THYSSENKRUPP METALURGICA DE MEXICO</option>';
+            nom_estab_options_str  += '<option value="THYSSENKRUPP PRESTA DE MEXICO">THYSSENKRUPP PRESTA DE MEXICO</option>';
+            nom_estab_options_str  += '<option value="TINTURA">TINTURA</option>';
+            nom_estab_options_str  += '<option value="TITAN TEXTIL">TITAN TEXTIL</option>';
+            nom_estab_options_str  += '<option value="TLAXCALA PLANTA CERAMICA">TLAXCALA PLANTA CERAMICA</option>';
+            nom_estab_options_str  += '<option value="TORK ELECTRO SISTEMAS">TORK ELECTRO SISTEMAS</option>';
+            nom_estab_options_str  += '<option value="TOWEL">TOWEL</option>';
+            nom_estab_options_str  += '<option value="TRANSFORMADORA DE PETROQUIMICOS">TRANSFORMADORA DE PETROQUIMICOS</option>';
+            nom_estab_options_str  += '<option value="TRANSNAV">TRANSNAV</option>';
+            nom_estab_options_str  += '<option value="TRITON INDUSTRIAL">TRITON INDUSTRIAL</option>';
+            nom_estab_options_str  += '<option value="TRUCK LITE">TRUCK LITE</option>';
+            nom_estab_options_str  += '<option value="TTS">TTS</option>';
+            nom_estab_options_str  += '<option value="TUBER3AS, TANQUES Y MONTAJES">TUBER3AS, TANQUES Y MONTAJES</option>';
+            nom_estab_options_str  += '<option value="TUBOS ECOLOGICOS DE CONCRETO">TUBOS ECOLOGICOS DE CONCRETO</option>';
+            nom_estab_options_str  += '<option value="TUBOS Y EMPAQUES DE PUEBLA">TUBOS Y EMPAQUES DE PUEBLA</option>';
+            nom_estab_options_str  += '<option value="TWB DE MEXICO">TWB DE MEXICO</option>';
+            nom_estab_options_str  += '<option value="UNICAR MEXICANA">UNICAR MEXICANA</option>';
+            nom_estab_options_str  += '<option value="UNICAR PLASTICS">UNICAR PLASTICS</option>';
+            nom_estab_options_str  += '<option value="UNIDAD ARZAFIL">UNIDAD ARZAFIL</option>';
+            nom_estab_options_str  += '<option value="UNIFORMES ANDREA">UNIFORMES ANDREA</option>';
+            nom_estab_options_str  += '<option value="US COTTON">US COTTON</option>';
+            nom_estab_options_str  += '<option value="USG MEXICO">USG MEXICO</option>';
+            nom_estab_options_str  += '<option value="VALTIC">VALTIC</option>';
+            nom_estab_options_str  += '<option value="VEMEQUIM">VEMEQUIM</option>';
+            nom_estab_options_str  += '<option value="VENTILACION Y TRANSFORMACION DE AIRE HERMEG">VENTILACION Y TRANSFORMACION DE AIRE HERMEG</option>';
+            nom_estab_options_str  += '<option value="VEROSTAMP">VEROSTAMP</option>';
+            nom_estab_options_str  += '<option value="VERTICAL SPIN">VERTICAL SPIN</option>';
+            nom_estab_options_str  += '<option value="VILLALVA CREA Y TRANSFORMA">VILLALVA CREA Y TRANSFORMA</option>';
+            nom_estab_options_str  += '<option value="VIVI INDUSTRIAS">VIVI INDUSTRIAS</option>';
+            nom_estab_options_str  += '<option value="VOLKSWAGEN DE MEXICO">VOLKSWAGEN DE MEXICO</option>';
+            nom_estab_options_str  += '<option value="VPS VEHICLE PROTECTION SYSTEMS DE MEXICO">VPS VEHICLE PROTECTION SYSTEMS DE MEXICO</option>';
+            nom_estab_options_str  += '<option value="VPT DE M9XICO">VPT DE M9XICO</option>';
+            nom_estab_options_str  += '<option value="VPT DE MEXICO">VPT DE MEXICO</option>';
+            nom_estab_options_str  += '<option value="WEBASTO CONVERTIBLES MEXICO">WEBASTO CONVERTIBLES MEXICO</option>';
+            nom_estab_options_str  += '<option value="WIAMEC">WIAMEC</option>';
+            nom_estab_options_str  += '<option value="WOODWORTH RASSINI">WOODWORTH RASSINI</option>';
+            nom_estab_options_str  += '<option value="YALE DE MEXICO">YALE DE MEXICO</option>';
+            nom_estab_options_str  += '<option value="ZWISSTEX MEXICO">ZWISSTEX MEXICO</option>';
+            sel_nom_estab.innerHTML = nom_estab_options_str;
+            div_nom_estab.appendChild(sel_nom_estab);
+            var lab_nom_estab = document.createElement('div');
+            lab_nom_estab.innerHTML = 'nom_estab';
+            lab_nom_estab.className = 'filterlabel';
+            div_nom_estab.appendChild(lab_nom_estab);
+            var reset_nom_estab = document.createElement('div');
+            reset_nom_estab.innerHTML = 'clear filter';
+            reset_nom_estab.className = 'filterlabel';
+            reset_nom_estab.onclick = function() {
+                var options = document.getElementById("sel_nom_estab").options;
+                for (var i=0; i < options.length; i++) {
+                    options[i].selected = false;
+                }
+                filterFunc();
+            };
+            div_nom_estab.appendChild(reset_nom_estab);
+            document.getElementById("menu").appendChild(
+                document.createElement("div"));
+            var div_per_ocu = document.createElement('div');
+            div_per_ocu.id = "div_per_ocu";
+            div_per_ocu.className= "filterselect";
+            document.getElementById("menu").appendChild(div_per_ocu);
+            sel_per_ocu = document.createElement('select');
+            sel_per_ocu.multiple = true;
+            sel_per_ocu.size = 4;
+            sel_per_ocu.id = "sel_per_ocu";
+            var per_ocu_options_str = "<option value='' unselected></option>";
+            sel_per_ocu.onchange = function(){filterFunc()};
+            per_ocu_options_str  += '<option value="100 personas">100 personas</option>';
+            per_ocu_options_str  += '<option value="250 personas">250 personas</option>';
+            per_ocu_options_str  += '<option value="30 personas">30 personas</option>';
+            per_ocu_options_str  += '<option value="50 personas">50 personas</option>';
+            sel_per_ocu.innerHTML = per_ocu_options_str;
+            div_per_ocu.appendChild(sel_per_ocu);
+            var lab_per_ocu = document.createElement('div');
+            lab_per_ocu.innerHTML = 'per_ocu';
+            lab_per_ocu.className = 'filterlabel';
+            div_per_ocu.appendChild(lab_per_ocu);
+            var reset_per_ocu = document.createElement('div');
+            reset_per_ocu.innerHTML = 'clear filter';
+            reset_per_ocu.className = 'filterlabel';
+            reset_per_ocu.onclick = function() {
+                var options = document.getElementById("sel_per_ocu").options;
+                for (var i=0; i < options.length; i++) {
+                    options[i].selected = false;
+                }
+                filterFunc();
+            };
+            div_per_ocu.appendChild(reset_per_ocu);
+            document.getElementById("menu").appendChild(
+                document.createElement("div"));
+            var div_NOMGEO = document.createElement('div');
+            div_NOMGEO.id = "div_NOMGEO";
+            div_NOMGEO.className= "filterselect";
+            document.getElementById("menu").appendChild(div_NOMGEO);
+            sel_NOMGEO = document.createElement('select');
+            sel_NOMGEO.multiple = true;
+            sel_NOMGEO.size = 10;
+            sel_NOMGEO.id = "sel_NOMGEO";
+            var NOMGEO_options_str = "<option value='' unselected></option>";
+            sel_NOMGEO.onchange = function(){filterFunc()};
+            NOMGEO_options_str  += '<option value="Acajete">Acajete</option>';
+            NOMGEO_options_str  += '<option value="Acuamanala de Miguel Hidalgo">Acuamanala de Miguel Hidalgo</option>';
+            NOMGEO_options_str  += '<option value="Amaxac de Guerrero">Amaxac de Guerrero</option>';
+            NOMGEO_options_str  += '<option value="Amozoc">Amozoc</option>';
+            NOMGEO_options_str  += '<option value="Apetatitlán de Antonio Carvajal">Apetatitlán de Antonio Carvajal</option>';
+            NOMGEO_options_str  += '<option value="Apizaco">Apizaco</option>';
+            NOMGEO_options_str  += '<option value="Atlangatepec">Atlangatepec</option>';
+            NOMGEO_options_str  += '<option value="Atlixco">Atlixco</option>';
+            NOMGEO_options_str  += '<option value="Calpan">Calpan</option>';
+            NOMGEO_options_str  += '<option value="Calpulalpan">Calpulalpan</option>';
+            NOMGEO_options_str  += '<option value="Chiautempan">Chiautempan</option>';
+            NOMGEO_options_str  += '<option value="Chiautzingo">Chiautzingo</option>';
+            NOMGEO_options_str  += '<option value="Contla de Juan Cuamatzi">Contla de Juan Cuamatzi</option>';
+            NOMGEO_options_str  += '<option value="Coronango">Coronango</option>';
+            NOMGEO_options_str  += '<option value="Cuautinchán">Cuautinchán</option>';
+            NOMGEO_options_str  += '<option value="Cuautlancingo">Cuautlancingo</option>';
+            NOMGEO_options_str  += '<option value="Cuaxomulco">Cuaxomulco</option>';
+            NOMGEO_options_str  += '<option value="Domingo Arenas">Domingo Arenas</option>';
+            NOMGEO_options_str  += '<option value="Emiliano Zapata">Emiliano Zapata</option>';
+            NOMGEO_options_str  += '<option value="Españita">Españita</option>';
+            NOMGEO_options_str  += '<option value="Huamantla">Huamantla</option>';
+            NOMGEO_options_str  += '<option value="Huejotzingo">Huejotzingo</option>';
+            NOMGEO_options_str  += '<option value="Hueyotlipan">Hueyotlipan</option>';
+            NOMGEO_options_str  += '<option value="Ixtacuixtla de Mariano Matamoros">Ixtacuixtla de Mariano Matamoros</option>';
+            NOMGEO_options_str  += '<option value="Ixtenco">Ixtenco</option>';
+            NOMGEO_options_str  += '<option value="Juan C. Bonilla">Juan C. Bonilla</option>';
+            NOMGEO_options_str  += '<option value="La Magdalena Tlaltelulco">La Magdalena Tlaltelulco</option>';
+            NOMGEO_options_str  += '<option value="Lázaro Cárdenas">Lázaro Cárdenas</option>';
+            NOMGEO_options_str  += '<option value="Mazatecochco de José María Morelos">Mazatecochco de José María Morelos</option>';
+            NOMGEO_options_str  += '<option value="Muñoz de Domingo Arenas">Muñoz de Domingo Arenas</option>';
+            NOMGEO_options_str  += '<option value="Nanacamilpa de Mariano Arista">Nanacamilpa de Mariano Arista</option>';
+            NOMGEO_options_str  += '<option value="Natívitas">Natívitas</option>';
+            NOMGEO_options_str  += '<option value="Nealtican">Nealtican</option>';
+            NOMGEO_options_str  += '<option value="Ocoyucan">Ocoyucan</option>';
+            NOMGEO_options_str  += '<option value="Panotla">Panotla</option>';
+            NOMGEO_options_str  += '<option value="Papalotla de Xicohténcatl">Papalotla de Xicohténcatl</option>';
+            NOMGEO_options_str  += '<option value="Puebla">Puebla</option>';
+            NOMGEO_options_str  += '<option value="San Andrés Cholula">San Andrés Cholula</option>';
+            NOMGEO_options_str  += '<option value="San Damián Texóloc">San Damián Texóloc</option>';
+            NOMGEO_options_str  += '<option value="San Felipe Teotlalcingo">San Felipe Teotlalcingo</option>';
+            NOMGEO_options_str  += '<option value="San Francisco Tetlanohcan">San Francisco Tetlanohcan</option>';
+            NOMGEO_options_str  += '<option value="San Gregorio Atzompa">San Gregorio Atzompa</option>';
+            NOMGEO_options_str  += '<option value="San Jerónimo Tecuanipan">San Jerónimo Tecuanipan</option>';
+            NOMGEO_options_str  += '<option value="San Jerónimo Zacualpan">San Jerónimo Zacualpan</option>';
+            NOMGEO_options_str  += '<option value="San José Teacalco">San José Teacalco</option>';
+            NOMGEO_options_str  += '<option value="San Juan Huactzinco">San Juan Huactzinco</option>';
+            NOMGEO_options_str  += '<option value="San Lorenzo Axocomanitla">San Lorenzo Axocomanitla</option>';
+            NOMGEO_options_str  += '<option value="San Lucas Tecopilco">San Lucas Tecopilco</option>';
+            NOMGEO_options_str  += '<option value="San Martín Texmelucan">San Martín Texmelucan</option>';
+            NOMGEO_options_str  += '<option value="San Matías Tlalancaleca">San Matías Tlalancaleca</option>';
+            NOMGEO_options_str  += '<option value="San Miguel Xoxtla">San Miguel Xoxtla</option>';
+            NOMGEO_options_str  += '<option value="San Nicolás de los Ranchos">San Nicolás de los Ranchos</option>';
+            NOMGEO_options_str  += '<option value="San Pablo del Monte">San Pablo del Monte</option>';
+            NOMGEO_options_str  += '<option value="San Pedro Cholula">San Pedro Cholula</option>';
+            NOMGEO_options_str  += '<option value="San Salvador el Verde">San Salvador el Verde</option>';
+            NOMGEO_options_str  += '<option value="Sanctórum de Lázaro Cárdenas">Sanctórum de Lázaro Cárdenas</option>';
+            NOMGEO_options_str  += '<option value="Santa Ana Nopalucan">Santa Ana Nopalucan</option>';
+            NOMGEO_options_str  += '<option value="Santa Apolonia Teacalco">Santa Apolonia Teacalco</option>';
+            NOMGEO_options_str  += '<option value="Santa Catarina Ayometla">Santa Catarina Ayometla</option>';
+            NOMGEO_options_str  += '<option value="Santa Cruz Quilehtla">Santa Cruz Quilehtla</option>';
+            NOMGEO_options_str  += '<option value="Santa Cruz Tlaxcala">Santa Cruz Tlaxcala</option>';
+            NOMGEO_options_str  += '<option value="Santa Isabel Cholula">Santa Isabel Cholula</option>';
+            NOMGEO_options_str  += '<option value="Santa Isabel Xiloxoxtla">Santa Isabel Xiloxoxtla</option>';
+            NOMGEO_options_str  += '<option value="Tecali de Herrera">Tecali de Herrera</option>';
+            NOMGEO_options_str  += '<option value="Tenancingo">Tenancingo</option>';
+            NOMGEO_options_str  += '<option value="Teolocholco">Teolocholco</option>';
+            NOMGEO_options_str  += '<option value="Tepatlaxco de Hidalgo">Tepatlaxco de Hidalgo</option>';
+            NOMGEO_options_str  += '<option value="Tepeaca">Tepeaca</option>';
+            NOMGEO_options_str  += '<option value="Tepetitla de Lardizábal">Tepetitla de Lardizábal</option>';
+            NOMGEO_options_str  += '<option value="Tepeyanco">Tepeyanco</option>';
+            NOMGEO_options_str  += '<option value="Terrenate">Terrenate</option>';
+            NOMGEO_options_str  += '<option value="Tetla de la Solidaridad">Tetla de la Solidaridad</option>';
+            NOMGEO_options_str  += '<option value="Tetlatlahuca">Tetlatlahuca</option>';
+            NOMGEO_options_str  += '<option value="Tianguismanalco">Tianguismanalco</option>';
+            NOMGEO_options_str  += '<option value="Tlahuapan">Tlahuapan</option>';
+            NOMGEO_options_str  += '<option value="Tlaltenango">Tlaltenango</option>';
+            NOMGEO_options_str  += '<option value="Tlaxcala">Tlaxcala</option>';
+            NOMGEO_options_str  += '<option value="Tocatlán">Tocatlán</option>';
+            NOMGEO_options_str  += '<option value="Tochimilco">Tochimilco</option>';
+            NOMGEO_options_str  += '<option value="Totolac">Totolac</option>';
+            NOMGEO_options_str  += '<option value="Tzompantepec">Tzompantepec</option>';
+            NOMGEO_options_str  += '<option value="Xaloztoc">Xaloztoc</option>';
+            NOMGEO_options_str  += '<option value="Xaltocan">Xaltocan</option>';
+            NOMGEO_options_str  += '<option value="Xicohtzinco">Xicohtzinco</option>';
+            NOMGEO_options_str  += '<option value="Yauhquemehcan">Yauhquemehcan</option>';
+            NOMGEO_options_str  += '<option value="Zacatelco">Zacatelco</option>';
+            NOMGEO_options_str  += '<option value="Ziltlaltépec de Trinidad Sánchez Santos">Ziltlaltépec de Trinidad Sánchez Santos</option>';
+            sel_NOMGEO.innerHTML = NOMGEO_options_str;
+            div_NOMGEO.appendChild(sel_NOMGEO);
+            var lab_NOMGEO = document.createElement('div');
+            lab_NOMGEO.innerHTML = 'NOMGEO';
+            lab_NOMGEO.className = 'filterlabel';
+            div_NOMGEO.appendChild(lab_NOMGEO);
+            var reset_NOMGEO = document.createElement('div');
+            reset_NOMGEO.innerHTML = 'clear filter';
+            reset_NOMGEO.className = 'filterlabel';
+            reset_NOMGEO.onclick = function() {
+                var options = document.getElementById("sel_NOMGEO").options;
+                for (var i=0; i < options.length; i++) {
+                    options[i].selected = false;
+                }
+                filterFunc();
+            };
+            div_NOMGEO.appendChild(reset_NOMGEO);
+        L.ImageOverlay.include({
+            getBounds: function () {
+                return this._bounds;
+            }
+        });
+        </script>
+    </body>
+</html>
